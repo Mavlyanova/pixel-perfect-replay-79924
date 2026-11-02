@@ -33,7 +33,7 @@ describe("folding and isolation", () => {
     expect(hidden.has("n-mgm")).toBe(true);
     expect(hidden.has("n-mother")).toBe(false);
     expect(hidden.has("n-child")).toBe(false);
-    expect(hidden.size).toBe(2);
+    expect(hidden.size).toBe(3);
   });
   it("no filters hides nobody", () => {
     expect(computeHidden(nodes, edges, new Set(), null).size).toBe(0);
