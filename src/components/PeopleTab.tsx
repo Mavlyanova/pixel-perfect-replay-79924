@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, LocateFixed, Pencil } from "lucide-react";
 import { useShajara } from "@/context/ShajaraContext";
 import { isInTree } from "@/lib/shajara";
 import { DetailDrawer } from "@/components/tree/DetailDrawer";
@@ -16,7 +16,7 @@ type SortKey = "fullName" | "status" | "birthDate" | "deathDate";
 const initials = (name: string) =>
   name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
-export function PeopleTab() {
+export function PeopleTab({ onFocusPerson }: { onFocusPerson: (nodeId: string) => void }) {
   const { t, nodes, edges, user } = useShajara();
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "fullName", dir: 1 });
@@ -112,6 +112,9 @@ export function PeopleTab() {
                   <TableCell className="tabular-nums">{n.birthDate || "—"}</TableCell>
                   <TableCell className="tabular-nums">{n.deathDate || "—"}</TableCell>
                   <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => onFocusPerson(n.id)} aria-label={`${t("tabTree")}: ${n.fullName}`} title={`${t("tabTree")}: ${n.fullName}`}>
+                      <LocateFixed className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditId(n.id)}>
                       <Pencil className="mr-1 h-3.5 w-3.5" /> {t("edit")}
                     </Button>

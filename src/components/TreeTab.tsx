@@ -35,11 +35,13 @@ import { Label } from "@/components/ui/label";
 
 const nodeTypes: NodeTypes = { person: PersonCard };
 type Pos = Record<string, { x: number; y: number }>;
+type TreeFocusProps = { focusNodeId?: string | null; onFocusComplete?: () => void };
 
-function TreeCanvas() {
+function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   const { t, nodes, edges, user, currentRole, reconnectEdge, removeEdge } = useShajara();
   const canEdit = canMutate(currentRole);
   const rf = useReactFlow();
+  const initialFitView = useRef(!focusNodeId);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const [direction, setDirection] = useState<Direction>("TB");
@@ -57,8 +59,8 @@ function TreeCanvas() {
 
   const relayout = useCallback(() => {
     setPositions(layoutPositions(visibleNodes, edges, direction, compact));
-    requestAnimationFrame(() => rf.fitView({ padding: 0.2, duration: 300 }));
-  }, [visibleNodes, edges, direction, compact, rf]);
+    if (!focusNodeId) requestAnimationFrame(() => rf.fitView({ padding: 0.2, duration: 300 }));
+  }, [visibleNodes, edges, direction, compact, rf, focusNodeId]);
 
   // Re-layout whenever structure / mode changes.
   const structureKey = `${direction}|${compact}|${visibleNodes.map((n) => n.id).join(",")}|${edges.map((e) => `${e.from}>${e.to}`).join(",")}`;
@@ -66,6 +68,22 @@ function TreeCanvas() {
     relayout();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [structureKey]);
+
+  // Wait for layout and measured nodes before centering the requested person.
+  // Suppress the initial whole-tree animation so it cannot override this focus.
+  useEffect(() => {
+    if (!focusNodeId || !rf.viewportInitialized || !positions[focusNodeId]) return;
+    let cancelled = false;
+    const frame = requestAnimationFrame(() => {
+      void rf.fitView({ nodes: [{ id: focusNodeId }], padding: 0.5, maxZoom: 1.5, duration: 600 }).then((focused) => {
+        if (focused && !cancelled) onFocusComplete?.();
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [focusNodeId, positions, rf, rf.viewportInitialized, onFocusComplete]);
 
   const toggle = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -79,6 +97,7 @@ function TreeCanvas() {
   const flowNodes: PersonFlowNode[] = visibleNodes.map((p) => ({
     id: p.id,
     type: "person",
+    ...(compact ? CARD_SIZE.compact : CARD_SIZE.full),
     position: positions[p.id] ?? { x: 0, y: 0 },
     data: {
       person: p,
@@ -250,7 +269,7 @@ function TreeCanvas() {
           zoomOnDoubleClick={false}
           minZoom={0.1}
           maxZoom={2}
-          fitView
+          fitView={initialFitView.current}
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={24} />
@@ -264,10 +283,10 @@ function TreeCanvas() {
   );
 }
 
-export function TreeTab() {
+export function TreeTab(props: TreeFocusProps) {
   return (
     <ReactFlowProvider>
-      <TreeCanvas />
+      <TreeCanvas {...props} />
     </ReactFlowProvider>
   );
 }

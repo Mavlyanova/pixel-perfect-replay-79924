@@ -22,6 +22,7 @@ const SIDEBAR_KEY = "shajara:sidebar";
 export function AppShell() {
   const { ready, t, lang, setLang, isAuthenticated, user, activeTree, currentRole, nodes, logout } = useShajara();
   const [tab, setTab] = useState<Tab>("tabTree");
+  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
   const [dark, setDark] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -40,6 +41,10 @@ export function AppShell() {
   const toggleSidebar = () => {
     window.localStorage.setItem(SIDEBAR_KEY, collapsed ? "0" : "1");
     setCollapsed(!collapsed);
+  };
+  const focusPerson = (nodeId: string) => {
+    setFocusNodeId(nodeId);
+    setTab("tabTree");
   };
 
   const langPicker = (
@@ -145,7 +150,7 @@ export function AppShell() {
             <p className="text-sm text-muted-foreground">{t("welcome", { name: user?.fullName ?? "" })}</p>
             <h2 className="font-display text-4xl text-foreground">{activeTree?.name}</h2>
           </div>
-          {tab === "tabTree" ? <TreeTab /> : tab === "tabPeople" ? <PeopleTab /> : <SettingsTab />}
+          {tab === "tabTree" ? <TreeTab focusNodeId={focusNodeId} onFocusComplete={() => setFocusNodeId(null)} /> : tab === "tabPeople" ? <PeopleTab onFocusPerson={focusPerson} /> : <SettingsTab />}
         </main>
       </div>
     </div>
