@@ -98,6 +98,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   const flowNodes: PersonFlowNode[] = visibleNodes.map((p) => ({
     id: p.id,
     type: "person",
+    ...(compact ? CARD_SIZE.compact : CARD_SIZE.full),
     position: positions[p.id] ?? { x: 0, y: 0 },
     data: {
       person: p,
