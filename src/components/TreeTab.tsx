@@ -8,7 +8,6 @@ import {
   getNodesBounds,
   getViewportForBounds,
   useReactFlow,
-  useNodesInitialized,
   type Connection,
   type Edge as FlowEdge,
   type NodeChange,
@@ -42,7 +41,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   const { t, nodes, edges, user, currentRole, reconnectEdge, removeEdge } = useShajara();
   const canEdit = canMutate(currentRole);
   const rf = useReactFlow();
-  const nodesInitialized = useNodesInitialized();
+  const initialFitView = useRef(!focusNodeId);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const [direction, setDirection] = useState<Direction>("TB");
@@ -84,7 +83,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [focusNodeId, nodesInitialized, positions, rf, rf.viewportInitialized, onFocusComplete]);
+  }, [focusNodeId, positions, rf, rf.viewportInitialized, onFocusComplete]);
 
   const toggle = useCallback((id: string) => {
     setCollapsed((prev) => {
@@ -270,7 +269,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
           zoomOnDoubleClick={false}
           minZoom={0.1}
           maxZoom={2}
-          fitView={!focusNodeId}
+          fitView={initialFitView.current}
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={24} />
