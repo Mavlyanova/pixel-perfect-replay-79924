@@ -35,14 +35,14 @@ describe("matching", () => {
 describe("tree binding", () => {
   it("claiming binds user as Viewer", () => {
     const s = claimNode(seedState(), "t-yusupov", "n-child", user);
-    expect(s.trees[0].members.u1).toBe("Viewer");
+    expect(s.trees[0]?.members["u1"]).toBe("Viewer");
     expect(s.user?.nodeId).toBe("n-child");
     expect(s.activeTreeId).toBe("t-yusupov");
   });
   it("creating own tree makes user Owner", () => {
     const s = createOwnTree(seedState(), { ...user, fullName: "Ali Valiyev" });
     const tree = s.trees.find((t) => t.id === s.activeTreeId)!;
-    expect(tree.members.u1).toBe("Owner");
+    expect(tree.members["u1"]).toBe("Owner");
     expect(tree.nodes).toHaveLength(1);
   });
 });
