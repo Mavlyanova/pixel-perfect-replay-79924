@@ -48,3 +48,33 @@ describe("context permissions", () => {
     warn.mockRestore();
   });
 });
+
+describe("context graph mutations (Owner)", () => {
+  it("reconnects and removes edges, updates node details", () => {
+    const wrapper = ({ children }: { children: ReactNode }) => <ShajaraProvider>{children}</ShajaraProvider>;
+    const { result } = renderHook(() => useShajara(), { wrapper });
+    act(() => {
+      const { user } = result.current.beginLogin("Owner Person", "1990-01-01");
+      result.current.startOwnTree(user);
+    });
+    let childId = "";
+    let edgeId = "";
+    const selfId = result.current.user!.nodeId!;
+    act(() => {
+      childId = result.current.addNode({ fullName: "Kid", birthDate: "2020-01-01", gender: "female" }).id;
+    });
+    act(() => {
+      edgeId = result.current.addEdge({ from: selfId, to: childId, type: "parent" }).id;
+    });
+    let otherId = "";
+    act(() => {
+      otherId = result.current.addNode({ fullName: "Other", birthDate: "1991-01-01", gender: "male" }).id;
+    });
+    act(() => result.current.reconnectEdge(edgeId, otherId, childId));
+    expect(result.current.edges.find((e) => e.id === edgeId)?.from).toBe(otherId);
+    act(() => result.current.updateNode(childId, { notes: "hello" }));
+    expect(result.current.nodes.find((n) => n.id === childId)?.notes).toBe("hello");
+    act(() => result.current.removeEdge(edgeId));
+    expect(result.current.edges).toHaveLength(0);
+  });
+});
