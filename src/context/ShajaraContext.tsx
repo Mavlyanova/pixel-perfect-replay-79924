@@ -6,6 +6,7 @@ import {
   findUnlinkedMatch,
   loadState,
   saveState,
+  setMemberRole,
   seedState,
   uid,
   type Edge,
@@ -41,6 +42,7 @@ interface Ctx {
   updateNode: (id: string, patch: Partial<Omit<PersonNode, "id">>) => void;
   removeEdge: (id: string) => void;
   reconnectEdge: (id: string, from: string, to: string) => void;
+  changeRole: (userId: string, role: Role) => void;
 }
 
 const ShajaraContext = createContext<Ctx | null>(null);
@@ -119,6 +121,11 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
       removeEdge: (id) => mutateTree((tr) => ({ ...tr, edges: tr.edges.filter((e) => e.id !== id) })),
       reconnectEdge: (id, from, to) =>
         mutateTree((tr) => ({ ...tr, edges: tr.edges.map((e) => (e.id === id ? { ...e, from, to } : e)) })),
+      changeRole: (userId, role) => {
+        if (!activeTree) return;
+        const next = setMemberRole(activeTree, currentRole, userId, role);
+        setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === next.id ? next : tr)) }));
+      },
     }),
     [ready, lang, setLang, t, state, activeTree, currentRole, mutateTree],
   );

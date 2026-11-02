@@ -46,3 +46,25 @@ describe("tree binding", () => {
     expect(tree.nodes).toHaveLength(1);
   });
 });
+
+import { isInTree, LastOwnerError, setMemberRole } from "@/lib/shajara";
+
+describe("role management", () => {
+  const tree = () => seedState().trees[0]!;
+  it("Owner can change an Editor to Viewer", () => {
+    expect(setMemberRole(tree(), "Owner", "u-dilnoza", "Viewer").members["u-dilnoza"]).toBe("Viewer");
+  });
+  it("Editor cannot change roles", () => {
+    expect(() => setMemberRole(tree(), "Editor", "u-dilnoza", "Owner")).toThrow(PermissionError);
+  });
+  it("cannot demote the last Owner", () => {
+    expect(() => setMemberRole(tree(), "Owner", "u-karim", "Editor")).toThrow(LastOwnerError);
+  });
+});
+
+describe("in-tree status", () => {
+  it("linked person is in tree, unlinked is not", () => {
+    expect(isInTree(seedState().trees[0]!, "n-child")).toBe(true);
+    expect(isInTree(seedState().trees[0]!, "n-cousin")).toBe(false);
+  });
+});
