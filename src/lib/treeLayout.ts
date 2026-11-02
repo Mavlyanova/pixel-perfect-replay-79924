@@ -93,7 +93,7 @@ export function layoutPositions(
   edges.forEach((e) => {
     if (!ids.has(e.from) || !ids.has(e.to)) return;
     if (e.type === "parent") g.setEdge(e.from, e.to);
-    else g.setEdge(e.from, e.to, { minlen: 0, weight: 2 });
+    // spouse edges are drawn but not ranked; shared children keep couples adjacent
   });
   dagre.layout(g);
   const out: Record<string, { x: number; y: number }> = {};

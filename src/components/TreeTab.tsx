@@ -104,11 +104,11 @@ function TreeCanvas() {
         id: e.id,
         source: e.from,
         target: e.to,
-        sourceHandle: spouse ? "s-out" : undefined,
-        targetHandle: spouse ? "s-in" : undefined,
+        sourceHandle: spouse ? "s-out" : null,
+        targetHandle: spouse ? "s-in" : null,
         type: spouse ? "straight" : ortho ? "smoothstep" : "default",
         reconnectable: canEdit && !spouse,
-        style: { stroke: `var(--branch-${branch})`, strokeWidth: 2, strokeDasharray: spouse ? "6 4" : undefined },
+        style: { stroke: `var(--branch-${branch})`, strokeWidth: 2, ...(spouse ? { strokeDasharray: "6 4" } : {}) },
       };
     });
 

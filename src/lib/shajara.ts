@@ -7,7 +7,7 @@ export interface PersonNode {
   birthDate: string; // YYYY-MM-DD
   gender: Gender;
   claimedBy: string | null;
-  deathDate?: string;
+  deathDate?: string | undefined;
   avatarUrl?: string;
   notes?: string;
   documents?: { label: string; url: string }[];
