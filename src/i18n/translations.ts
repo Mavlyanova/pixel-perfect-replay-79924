@@ -1,0 +1,122 @@
+export type Lang = "uz" | "ru" | "en";
+export const LANGS: Lang[] = ["uz", "ru", "en"];
+export const DEFAULT_LANG: Lang = "uz";
+
+const uz = {
+  appName: "Shajara",
+  tagline: "Oilangiz tarixini birga saqlang",
+  tabTree: "Shajara",
+  tabMembers: "A'zolar",
+  tabSearch: "Qidiruv",
+  tabSettings: "Sozlamalar",
+  searchPlaceholder: "Ism bo'yicha qidirish...",
+  roleOwner: "Egasi",
+  roleEditor: "Muharrir",
+  roleViewer: "Kuzatuvchi",
+  loginTitle: "Kirish yoki ro'yxatdan o'tish",
+  loginSubtitle: "To'liq ismingiz va tug'ilgan sanangizni kiriting",
+  fullName: "To'liq ism",
+  birthDate: "Tug'ilgan sana",
+  continue: "Davom etish",
+  logout: "Chiqish",
+  challengeTitle: "Shaxsingizni tasdiqlang",
+  challengeQuestion: "Siz {father} va {mother}ning farzandimisiz?",
+  yes: "Ha, men",
+  no: "Yo'q",
+  noMatchTitle: "Yangi makon yarating",
+  noMatchBody: "Sizga mos yozuv topilmadi. Qanday boshlaysiz?",
+  createTree: "O'z shajarangizni yarating",
+  uploadSheets: "Google Sheets yuklash",
+  sheetsSoon: "Google Sheets importi keyingi bosqichda qo'shiladi",
+  unknown: "Noma'lum",
+  welcome: "Xush kelibsiz, {name}",
+  members: "a'zo",
+  viewerWarning: "Kuzatuvchi ma'lumotlarni o'zgartira olmaydi",
+  required: "Barcha maydonlarni to'ldiring",
+  activeTree: "Faol shajara",
+  emptyTree: "Shajara hali bo'sh",
+};
+
+export type TranslationKey = keyof typeof uz;
+type Dict = Record<TranslationKey, string>;
+
+const ru: Dict = {
+  appName: "Shajara",
+  tagline: "Храните историю семьи вместе",
+  tabTree: "Древо",
+  tabMembers: "Члены",
+  tabSearch: "Поиск",
+  tabSettings: "Настройки",
+  searchPlaceholder: "Поиск по имени...",
+  roleOwner: "Владелец",
+  roleEditor: "Редактор",
+  roleViewer: "Наблюдатель",
+  loginTitle: "Вход или регистрация",
+  loginSubtitle: "Введите полное имя и дату рождения",
+  fullName: "Полное имя",
+  birthDate: "Дата рождения",
+  continue: "Продолжить",
+  logout: "Выйти",
+  challengeTitle: "Подтвердите личность",
+  challengeQuestion: "Вы ребёнок {father} и {mother}?",
+  yes: "Да, это я",
+  no: "Нет",
+  noMatchTitle: "Создайте новое пространство",
+  noMatchBody: "Совпадений не найдено. Как начнём?",
+  createTree: "Создать своё древо",
+  uploadSheets: "Загрузить Google Sheets",
+  sheetsSoon: "Импорт Google Sheets появится на следующем этапе",
+  unknown: "Неизвестно",
+  welcome: "Добро пожаловать, {name}",
+  members: "чел.",
+  viewerWarning: "Наблюдатель не может изменять данные",
+  required: "Заполните все поля",
+  activeTree: "Активное древо",
+  emptyTree: "Древо пока пусто",
+};
+
+const en: Dict = {
+  appName: "Shajara",
+  tagline: "Keep your family's story together",
+  tabTree: "Tree",
+  tabMembers: "Members",
+  tabSearch: "Search",
+  tabSettings: "Settings",
+  searchPlaceholder: "Search by name...",
+  roleOwner: "Owner",
+  roleEditor: "Editor",
+  roleViewer: "Viewer",
+  loginTitle: "Sign in or register",
+  loginSubtitle: "Enter your full name and birth date",
+  fullName: "Full name",
+  birthDate: "Birth date",
+  continue: "Continue",
+  logout: "Log out",
+  challengeTitle: "Confirm your identity",
+  challengeQuestion: "Are you the child of {father} and {mother}?",
+  yes: "Yes, that's me",
+  no: "No",
+  noMatchTitle: "Start a new space",
+  noMatchBody: "No matching record found. How would you like to begin?",
+  createTree: "Create Your Own Tree",
+  uploadSheets: "Upload Google Sheets",
+  sheetsSoon: "Google Sheets import arrives in the next step",
+  unknown: "Unknown",
+  welcome: "Welcome, {name}",
+  members: "members",
+  viewerWarning: "Viewers cannot modify data",
+  required: "Please fill in all fields",
+  activeTree: "Active tree",
+  emptyTree: "The tree is empty",
+};
+
+export const translations: Record<Lang, Dict> = { uz, ru, en };
+
+export function translate(
+  lang: Lang,
+  key: TranslationKey,
+  vars: Record<string, string> = {},
+): string {
+  const template = translations[lang]?.[key] ?? translations[DEFAULT_LANG][key] ?? key;
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? `{${k}}`);
+}
