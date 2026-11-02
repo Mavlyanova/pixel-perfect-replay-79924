@@ -37,9 +37,11 @@ describe("People to Tree focus", () => {
     await waitFor(() => expect(fitView).toHaveBeenCalled());
 
     for (let visit = 0; visit < 2; visit++) {
-      fireEvent.click(screen.getAllByRole("button", { name: "People", exact: true })[0]);
+      const peopleTab = screen.getAllByRole("button", { name: /^People$/ }).at(0);
+      if (!peopleTab) throw new Error("People navigation is missing");
+      fireEvent.click(peopleTab);
       fitView.mockClear();
-      fireEvent.click(screen.getByRole("button", { name: "Tree: Aziz Yusupov", exact: true }));
+      fireEvent.click(screen.getByRole("button", { name: /^Tree: Aziz Yusupov$/ }));
       expect(within(screen.getByLabelText("Family canvas")).getByText("Aziz Yusupov")).toBeInTheDocument();
       expect(screen.queryByRole("table")).not.toBeInTheDocument();
       await waitFor(() => expect(fitView).toHaveBeenCalledWith({
