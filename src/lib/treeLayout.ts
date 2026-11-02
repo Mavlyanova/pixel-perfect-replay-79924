@@ -78,6 +78,14 @@ export function edgeBranch(branches: Map<string, Branch>, edge: Edge): Branch {
   return a;
 }
 
+/** Minimum gap (px) between spouses placed side by side. */
+export const SPOUSE_GAP = 80;
+
+/**
+ * Couples (connected by spouse edges) are laid out as one dagre unit, so partners always sit
+ * side by side on the same rank with exactly SPOUSE_GAP between cards, and parent→child lines
+ * leave the couple's centre instead of crossing over one partner.
+ */
 export function layoutPositions(
   nodes: PersonNode[],
   edges: Edge[],
@@ -85,21 +93,52 @@ export function layoutPositions(
   compact: boolean,
 ): Record<string, { x: number; y: number }> {
   const size = compact ? CARD_SIZE.compact : CARD_SIZE.full;
-  const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: direction, nodesep: 40, ranksep: 80 });
-  g.setDefaultEdgeLabel(() => ({}));
+  const horizontal = direction === "TB" || direction === "BT";
   const ids = new Set(nodes.map((n) => n.id));
-  nodes.forEach((n) => g.setNode(n.id, { ...size }));
-  edges.forEach((e) => {
-    if (!ids.has(e.from) || !ids.has(e.to)) return;
-    if (e.type === "parent") g.setEdge(e.from, e.to);
-    // spouse edges are drawn but not ranked; shared children keep couples adjacent
+  const visible = edges.filter((e) => ids.has(e.from) && ids.has(e.to));
+
+  // Group spouses into units (male partner first for a stable order).
+  const unitOf = new Map<string, string>();
+  const units = new Map<string, string[]>();
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  for (const n of nodes) {
+    if (unitOf.has(n.id)) continue;
+    const members = [...walk([n.id], (x) => spousesOf(visible, x))];
+    members.sort((a, b) => (byId.get(a)!.gender === "male" ? 0 : 1) - (byId.get(b)!.gender === "male" ? 0 : 1));
+    units.set(n.id, members);
+    members.forEach((m) => unitOf.set(m, n.id));
+  }
+
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: direction, nodesep: SPOUSE_GAP, ranksep: 90 });
+  g.setDefaultEdgeLabel(() => ({}));
+  units.forEach((members, uid) => {
+    const k = members.length;
+    g.setNode(
+      uid,
+      horizontal
+        ? { width: k * size.width + (k - 1) * SPOUSE_GAP, height: size.height }
+        : { width: size.width, height: k * size.height + (k - 1) * SPOUSE_GAP },
+    );
+  });
+  visible.forEach((e) => {
+    if (e.type !== "parent") return;
+    const a = unitOf.get(e.from)!;
+    const b = unitOf.get(e.to)!;
+    if (a !== b && !g.hasEdge(a, b)) g.setEdge(a, b);
   });
   dagre.layout(g);
+
   const out: Record<string, { x: number; y: number }> = {};
-  nodes.forEach((n) => {
-    const p = g.node(n.id);
-    out[n.id] = { x: p.x - size.width / 2, y: p.y - size.height / 2 };
+  units.forEach((members, uid) => {
+    const p = g.node(uid);
+    const left = p.x - p.width / 2;
+    const top = p.y - p.height / 2;
+    members.forEach((m, i) => {
+      out[m] = horizontal
+        ? { x: left + i * (size.width + SPOUSE_GAP), y: top }
+        : { x: left, y: top + i * (size.height + SPOUSE_GAP) };
+    });
   });
   return out;
 }
