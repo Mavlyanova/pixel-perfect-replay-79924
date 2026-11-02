@@ -73,7 +73,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   // Wait for layout and measured nodes before centering the requested person.
   // Suppress the initial whole-tree animation so it cannot override this focus.
   useEffect(() => {
-    if (!focusNodeId || !nodesInitialized || !rf.viewportInitialized || !positions[focusNodeId]) return;
+    if (!focusNodeId || !rf.viewportInitialized || !positions[focusNodeId]) return;
     let cancelled = false;
     const frame = requestAnimationFrame(() => {
       void rf.fitView({ nodes: [{ id: focusNodeId }], padding: 0.5, maxZoom: 1.5, duration: 600 }).then((focused) => {
