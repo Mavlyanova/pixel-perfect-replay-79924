@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep cross-tab person focus as transient AppShell state passed to PeopleTab and TreeTab; the canvas consumes it after measured-node fitView completes to avoid replaying focus on later visits.
