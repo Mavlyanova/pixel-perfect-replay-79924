@@ -6,7 +6,7 @@ import { ShajaraProvider } from "@/context/ShajaraContext";
 
 const { fitView, flow } = vi.hoisted(() => {
   const fitView = vi.fn().mockResolvedValue(true);
-  return { fitView, flow: { fitView } };
+  return { fitView, flow: { fitView, viewportInitialized: true } };
 });
 
 vi.mock("@xyflow/react", async (importOriginal) => ({
