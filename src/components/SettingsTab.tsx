@@ -44,7 +44,7 @@ export function SettingsTab() {
                 </div>
                 <Select value={p.role} disabled={!isOwner} onValueChange={(v) => onChange(p.userId, v as Role)}>
                   <SelectTrigger className="w-40" aria-label={`${t("role")}: ${p.name}`}>
-                    <SelectValue />
+                    <SelectValue>{t(ROLE_KEY[p.role])}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((r) => (
