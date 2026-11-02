@@ -76,3 +76,19 @@ describe("layout engine", () => {
     expect(lifespan({ birthDate: "1995-05-20" })).toBe("1995 –");
   });
 });
+
+import { layoutPositions as lp, SPOUSE_GAP } from "@/lib/treeLayout";
+import { seedState as seed } from "@/lib/shajara";
+
+describe("spouse pairing in auto layout", () => {
+  it("keeps every couple on the same row with an 80px gap", () => {
+    const tr = seed().trees[0]!;
+    const pos = lp(tr.nodes, tr.edges, "TB", false);
+    expect(SPOUSE_GAP).toBe(80);
+    for (const e of tr.edges.filter((x) => x.type === "spouse")) {
+      const a = pos[e.from]!, b = pos[e.to]!;
+      expect(a.y).toBe(b.y);
+      expect(Math.abs(a.x - b.x) - 220).toBe(80);
+    }
+  });
+});
