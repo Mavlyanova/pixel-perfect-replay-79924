@@ -76,7 +76,16 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
   const mutateTree = useCallback(
     (fn: (tree: Tree) => Tree) => {
       assertCanMutate(currentRole);
-      setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === s.activeTreeId ? fn(tr) : tr)) }));
+      setState((s) => {
+        const next: ShajaraState = {
+          ...s,
+          trees: s.trees.map((tr) => (tr.id === s.activeTreeId ? fn(tr) : tr)),
+        };
+        // Persist immediately so every person or relationship change survives a reload,
+        // even before React flushes the save effect.
+        saveState(next);
+        return next;
+      });
     },
     [currentRole],
   );

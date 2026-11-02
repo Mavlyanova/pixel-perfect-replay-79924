@@ -77,4 +77,33 @@ describe("context graph mutations (Owner)", () => {
     act(() => result.current.removeEdge(edgeId));
     expect(result.current.edges).toHaveLength(0);
   });
+
+  it("persists every addition and relationship change to localStorage instantly", () => {
+    const wrapper = ({ children }: { children: ReactNode }) => <ShajaraProvider>{children}</ShajaraProvider>;
+    const { result } = renderHook(() => useShajara(), { wrapper });
+    act(() => {
+      const { user } = result.current.beginLogin("Persister", "1985-03-03");
+      result.current.startOwnTree(user);
+    });
+
+    const activeTreeOf = (raw: string) => {
+      const s = JSON.parse(raw);
+      return s.trees.find((tr: { id: string }) => tr.id === s.activeTreeId);
+    };
+
+    let childId = "";
+    act(() => {
+      childId = result.current.addNode({ fullName: "Saved Kid", birthDate: "2021-02-02", gender: "male" }).id;
+    });
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).nodes.some((n: { id: string }) => n.id === childId)).toBe(true);
+
+    let edgeId = "";
+    act(() => {
+      edgeId = result.current.addEdge({ from: result.current.user!.nodeId!, to: childId, type: "parent" }).id;
+    });
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).edges.some((e: { id: string }) => e.id === edgeId)).toBe(true);
+
+    act(() => result.current.reconnectEdge(edgeId, childId, result.current.user!.nodeId!));
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).edges.find((e: { id: string }) => e.id === edgeId).from).toBe(childId);
+  });
 });
