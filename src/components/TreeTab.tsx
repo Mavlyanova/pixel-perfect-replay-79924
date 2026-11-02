@@ -84,7 +84,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [focusNodeId, nodesInitialized, positions, rf, onFocusComplete]);
+  }, [focusNodeId, nodesInitialized, positions, rf, rf.viewportInitialized, onFocusComplete]);
 
   const toggle = useCallback((id: string) => {
     setCollapsed((prev) => {
