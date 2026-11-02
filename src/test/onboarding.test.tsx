@@ -86,22 +86,24 @@ describe("context graph mutations (Owner)", () => {
       result.current.startOwnTree(user);
     });
 
+    const activeTreeOf = (raw: string) => {
+      const s = JSON.parse(raw);
+      return s.trees.find((tr: { id: string }) => tr.id === s.activeTreeId);
+    };
+
     let childId = "";
     act(() => {
       childId = result.current.addNode({ fullName: "Saved Kid", birthDate: "2021-02-02", gender: "male" }).id;
     });
-    let saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-    expect(saved.trees[0].nodes.some((n: { id: string }) => n.id === childId)).toBe(true);
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).nodes.some((n: { id: string }) => n.id === childId)).toBe(true);
 
     let edgeId = "";
     act(() => {
       edgeId = result.current.addEdge({ from: result.current.user!.nodeId!, to: childId, type: "parent" }).id;
     });
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-    expect(saved.trees[0].edges.some((e: { id: string }) => e.id === edgeId)).toBe(true);
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).edges.some((e: { id: string }) => e.id === edgeId)).toBe(true);
 
     act(() => result.current.reconnectEdge(edgeId, childId, result.current.user!.nodeId!));
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
-    expect(saved.trees[0].edges.find((e: { id: string }) => e.id === edgeId).from).toBe(childId);
+    expect(activeTreeOf(localStorage.getItem(STORAGE_KEY)!).edges.find((e: { id: string }) => e.id === edgeId).from).toBe(childId);
   });
 });
