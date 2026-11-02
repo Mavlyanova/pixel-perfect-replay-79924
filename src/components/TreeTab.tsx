@@ -188,7 +188,7 @@ function TreeCanvas() {
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted-foreground">{t("direction")}</span>
           <select aria-label={t("direction")} className="field-select" value={direction} onChange={(e) => setDirection(e.target.value as Direction)}>
-            {DIRECTIONS.map((d) => <option key={d} value={d}>{t(`dir${d}`)}</option>)}
+            {DIRECTIONS.map((d) => <option key={d} value={d}>{t(`dir${d}` as const)}</option>)}
           </select>
         </label>
         <label className="flex items-center gap-2 text-sm">

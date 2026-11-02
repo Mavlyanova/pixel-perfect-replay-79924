@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "@xyflow/react/dist/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -84,6 +85,9 @@
   --border: oklch(0.86 0.03 85);
   --input: oklch(0.86 0.03 85);
   --ring: oklch(0.4 0.08 155);
+  --branch-paternal: oklch(0.45 0.1 155);
+  --branch-maternal: oklch(0.62 0.15 40);
+  --branch-neutral: oklch(0.6 0.02 100);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -152,3 +156,47 @@
   box-shadow: 0 20px 50px -20px oklch(0.4 0.08 155 / 0.35);
 }
 @layer base { body { font-family: var(--font-sans); } }
+
+@layer components {
+  .person-card {
+    display: flex; align-items: center; gap: 0.75rem; height: 100%; width: 100%;
+    padding: 0.75rem; border-radius: var(--radius);
+    background: var(--color-card); color: var(--color-card-foreground);
+    border: 1px solid var(--color-border); border-left: 4px solid var(--branch-neutral);
+    box-shadow: 0 6px 18px -10px oklch(0.4 0.08 155 / 0.4);
+  }
+  .person-card--compact { padding: 0.35rem 0.6rem; gap: 0.4rem; }
+  .person-card--compact .font-display { font-size: 0.95rem; }
+  .person-card--paternal { border-left-color: var(--branch-paternal); }
+  .person-card--maternal { border-left-color: var(--branch-maternal); }
+  .person-card--self { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .person-avatar {
+    display: grid; place-items: center; flex-shrink: 0; width: 3.5rem; height: 3.5rem;
+    border-radius: 9999px; overflow: hidden; background: var(--color-secondary);
+    color: var(--color-secondary-foreground); border: 2px solid var(--color-accent);
+  }
+  .person-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .person-handle { width: 8px; height: 8px; background: var(--color-primary); border: none; opacity: 0.5; }
+  .person-handle--spouse { opacity: 0; }
+  .tree-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem;
+    padding: 0.75rem 1rem; border-radius: var(--radius);
+    background: var(--color-card); border: 1px solid var(--color-border);
+  }
+  .tree-banner {
+    display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 1rem;
+    border-radius: var(--radius); background: var(--color-accent); color: var(--color-accent-foreground); font-size: 0.875rem;
+  }
+  .tree-canvas {
+    height: 70vh; min-height: 480px; border-radius: var(--radius);
+    border: 1px solid var(--color-border); background: var(--color-background); overflow: hidden;
+  }
+  .field-select {
+    height: 2.25rem; padding: 0 0.6rem; border-radius: calc(var(--radius) - 2px);
+    border: 1px solid var(--color-input); background: var(--color-background); color: var(--color-foreground); font-size: 0.875rem;
+  }
+  .drawer-heading { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-muted-foreground); }
+  .legend-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 9999px; }
+  .legend-dot--paternal { background: var(--branch-paternal); }
+  .legend-dot--maternal { background: var(--branch-maternal); }
+}
