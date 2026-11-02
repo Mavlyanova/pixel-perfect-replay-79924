@@ -38,6 +38,9 @@ interface Ctx {
   addNode: (node: Omit<PersonNode, "id" | "claimedBy">) => PersonNode;
   addEdge: (edge: Omit<Edge, "id">) => Edge;
   removeNode: (id: string) => void;
+  updateNode: (id: string, patch: Partial<Omit<PersonNode, "id">>) => void;
+  removeEdge: (id: string) => void;
+  reconnectEdge: (id: string, from: string, to: string) => void;
 }
 
 const ShajaraContext = createContext<Ctx | null>(null);
@@ -111,6 +114,11 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
           nodes: tr.nodes.filter((n) => n.id !== id),
           edges: tr.edges.filter((e) => e.from !== id && e.to !== id),
         })),
+      updateNode: (id, patch) =>
+        mutateTree((tr) => ({ ...tr, nodes: tr.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)) })),
+      removeEdge: (id) => mutateTree((tr) => ({ ...tr, edges: tr.edges.filter((e) => e.id !== id) })),
+      reconnectEdge: (id, from, to) =>
+        mutateTree((tr) => ({ ...tr, edges: tr.edges.map((e) => (e.id === id ? { ...e, from, to } : e)) })),
     }),
     [ready, lang, setLang, t, state, activeTree, currentRole, mutateTree],
   );

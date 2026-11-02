@@ -7,6 +7,11 @@ export interface PersonNode {
   birthDate: string; // YYYY-MM-DD
   gender: Gender;
   claimedBy: string | null;
+  deathDate?: string;
+  avatarUrl?: string;
+  notes?: string;
+  documents?: { label: string; url: string }[];
+  metadata?: Record<string, string>;
 }
 
 export type EdgeType = "parent" | "spouse";
@@ -134,8 +139,13 @@ export function createOwnTree(state: ShajaraState, user: User): ShajaraState {
 }
 
 export function seedState(): ShajaraState {
-  const f: PersonNode = { id: "n-father", fullName: "Karim Yusupov", birthDate: "1965-03-12", gender: "male", claimedBy: null };
+  const gf: PersonNode = { id: "n-gf", fullName: "Rustam Yusupov", birthDate: "1938-01-15", deathDate: "2010-09-02", gender: "male", claimedBy: null, notes: "Samarqandda bog'bon bo'lib ishlagan." };
+  const gm: PersonNode = { id: "n-gm", fullName: "Saodat Yusupova", birthDate: "1942-04-10", deathDate: "2015-12-20", gender: "female", claimedBy: null };
+  const mgf: PersonNode = { id: "n-mgf", fullName: "Anvar Qodirov", birthDate: "1940-06-01", deathDate: "2005-03-11", gender: "male", claimedBy: null };
+  const mgm: PersonNode = { id: "n-mgm", fullName: "Gulnora Qodirova", birthDate: "1944-02-22", gender: "female", claimedBy: null };
+  const f: PersonNode = { id: "n-father", fullName: "Karim Yusupov", birthDate: "1965-03-12", gender: "male", claimedBy: null, metadata: { "Kasbi": "Muhandis" } };
   const m: PersonNode = { id: "n-mother", fullName: "Dilnoza Yusupova", birthDate: "1968-07-04", gender: "female", claimedBy: null };
+  const sis: PersonNode = { id: "n-sister", fullName: "Malika Yusupova", birthDate: "1998-11-08", gender: "female", claimedBy: null };
   const c: PersonNode = { id: "n-child", fullName: "Aziz Yusupov", birthDate: "1995-05-20", gender: "male", claimedBy: null };
   return {
     activeTreeId: null,
@@ -145,8 +155,16 @@ export function seedState(): ShajaraState {
         id: "t-yusupov",
         name: "Yusupovlar shajarasi",
         ownerId: null,
-        nodes: [f, m, c],
+        nodes: [gf, gm, mgf, mgm, f, m, c, sis],
         edges: [
+          { id: "e4", from: gf.id, to: gm.id, type: "spouse" },
+          { id: "e5", from: gf.id, to: f.id, type: "parent" },
+          { id: "e6", from: gm.id, to: f.id, type: "parent" },
+          { id: "e7", from: mgf.id, to: mgm.id, type: "spouse" },
+          { id: "e8", from: mgf.id, to: m.id, type: "parent" },
+          { id: "e9", from: mgm.id, to: m.id, type: "parent" },
+          { id: "e10", from: f.id, to: sis.id, type: "parent" },
+          { id: "e11", from: m.id, to: sis.id, type: "parent" },
           { id: "e1", from: f.id, to: m.id, type: "spouse" },
           { id: "e2", from: f.id, to: c.id, type: "parent" },
           { id: "e3", from: m.id, to: c.id, type: "parent" },

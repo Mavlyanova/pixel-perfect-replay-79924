@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useShajara } from "@/context/ShajaraContext";
 import { LANGS, type TranslationKey } from "@/i18n/translations";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { TreeTab } from "@/components/TreeTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -39,7 +40,7 @@ export function AppShell() {
           <OnboardingModal />
         </main>
       ) : (
-        <main className="mx-auto max-w-5xl px-6 py-8">
+        <main className={`mx-auto px-6 py-8 ${tab === "tabTree" ? "max-w-7xl" : "max-w-5xl"}`}>
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-sm text-muted-foreground">{t("welcome", { name: user?.fullName ?? "" })}</p>
@@ -65,7 +66,9 @@ export function AppShell() {
           {(tab === "tabSearch" || tab === "tabMembers") && (
             <Input className="mb-4" placeholder={t("searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
           )}
-          {tab === "tabSettings" ? (
+          {tab === "tabTree" ? (
+            <TreeTab />
+          ) : tab === "tabSettings" ? (
             <p className="text-muted-foreground">{t("activeTree")}: {activeTree?.name}</p>
           ) : filtered.length === 0 ? (
             <p className="text-muted-foreground">{t("emptyTree")}</p>
