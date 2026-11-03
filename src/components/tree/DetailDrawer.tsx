@@ -162,7 +162,6 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                     guard(() => updateNode(person.id, { documents: [...(person.documents ?? []), { label: docLabel.trim(), url: docUrl.trim() }] }));
                     setDocLabel(""); setDocUrl("");
                   }}>{t("add")}</Button>
-                  </div>
                 </div>
               )}
             </section>
@@ -198,10 +197,10 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                       onChange={(e) => setMetaVal(e.target.value)} 
                     />
                     <Button variant="outline" onClick={() => {
-                    if (!metaKey.trim()) return;
-                    guard(() => updateNode(person.id, { metadata: { ...(person.metadata ?? {}), [metaKey.trim()]: metaVal.trim() } }));
-                    setMetaKey(""); setMetaVal("");
-                  }}>{t("add")}</Button>
+                      if (!metaKey.trim()) return;
+                      guard(() => updateNode(person.id, { metadata: { ...(person.metadata ?? {}), [metaKey.trim()]: metaVal.trim() } }));
+                      setMetaKey(""); setMetaVal("");
+                    }}>{t("add")}</Button>
                   </div>
                 </div>
               )}
