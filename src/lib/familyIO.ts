@@ -72,9 +72,9 @@ export interface ImportRow {
   fullName: string;
   gender: Gender;
   birthDate: string;
-  deathDate?: string;
-  parentName?: string;
-  spouseName?: string;
+  deathDate?: string | undefined;
+  parentName?: string | undefined;
+  spouseName?: string | undefined;
 }
 
 export const CSV_TEMPLATE =
