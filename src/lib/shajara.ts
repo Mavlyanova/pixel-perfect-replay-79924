@@ -8,7 +8,7 @@ export interface PersonNode {
   gender: Gender;
   claimedBy: string | null;
   deathDate?: string | undefined;
-  avatarUrl?: string;
+  avatarUrl?: string | undefined;
   notes?: string;
   documents?: { label: string; url: string }[];
   metadata?: Record<string, string>;
