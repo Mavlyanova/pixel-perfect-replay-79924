@@ -1,0 +1,13 @@
+<!-- LOVABLE:BEGIN -->
+> [!IMPORTANT]
+> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
+> published git history — force pushing, or rebasing/amending/squashing commits
+> that are already pushed — as it rewrites history on Lovable's side and the
+> user will likely lose their project history.
+>
+> Commits you push to the connected branch sync back to Lovable and show up in
+> the editor, so keep the branch in a working state.
+<!-- LOVABLE:END -->
+
+- Keep cross-tab person focus as transient AppShell state passed to PeopleTab and TreeTab; the canvas consumes it after measured-node fitView completes to avoid replaying focus on later visits.
+- Tree workspace rules (create/switch/rename/delete/invite) live as pure functions in src/lib/shajara.ts and are wrapped by ShajaraContext; why: keeps owner-only rules testable without the UI.

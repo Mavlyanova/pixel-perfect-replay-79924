@@ -1,0 +1,289 @@
+export type Role = "Owner" | "Editor" | "Viewer";
+export type Gender = "male" | "female";
+
+export interface PersonNode {
+  id: string;
+  fullName: string;
+  birthDate: string; // YYYY-MM-DD
+  gender: Gender;
+  claimedBy: string | null;
+  deathDate?: string | undefined;
+  avatarUrl?: string | undefined;
+  notes?: string;
+  documents?: { label: string; url: string }[];
+  metadata?: Record<string, string>;
+}
+
+export type EdgeType = "parent" | "spouse";
+export interface Edge {
+  id: string;
+  from: string; // parent (for "parent")
+  to: string; // child (for "parent")
+  type: EdgeType;
+  marriageYear?: number | string;
+  divorceYear?: number | string;
+
+}
+
+export interface User {
+  id: string;
+  fullName: string;
+  birthDate: string;
+  nodeId: string | null;
+}
+
+export interface Tree {
+  id: string;
+  name: string;
+  ownerId: string | null;
+  nodes: PersonNode[];
+  edges: Edge[];
+  members: Record<string, Role>;
+  memberNames?: Record<string, string>;
+}
+
+export interface ShajaraState {
+  trees: Tree[];
+  activeTreeId: string | null;
+  user: User | null;
+}
+
+export const STORAGE_KEY = "shajara:state:v1";
+
+export class PermissionError extends Error {
+  constructor(message = "VIEWER_MUTATION_BLOCKED") {
+    super(message);
+    this.name = "PermissionError";
+  }
+}
+
+export const uid = () =>
+  Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+export const normalizeName = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
+
+export function canMutate(role: Role | null): boolean {
+  return role === "Owner" || role === "Editor";
+}
+
+export function assertCanMutate(role: Role | null): void {
+  if (!canMutate(role)) {
+    console.warn("[Shajara] ⚠ Viewer attempted a data mutation — blocked.");
+    throw new PermissionError();
+  }
+}
+
+export interface Match {
+  tree: Tree;
+  node: PersonNode;
+  father: PersonNode | null;
+  mother: PersonNode | null;
+}
+
+export function getParents(tree: Tree, nodeId: string) {
+  const parentIds = tree.edges
+    .filter((e) => e.type === "parent" && e.to === nodeId)
+    .map((e) => e.from);
+  const parents = tree.nodes.filter((n) => parentIds.includes(n.id));
+  return {
+    father: parents.find((p) => p.gender === "male") ?? null,
+    mother: parents.find((p) => p.gender === "female") ?? null,
+  };
+}
+
+export function findUnlinkedMatch(
+  trees: Tree[],
+  fullName: string,
+  birthDate: string,
+): Match | null {
+  const target = normalizeName(fullName);
+  for (const tree of trees) {
+    const node = tree.nodes.find(
+      (n) => !n.claimedBy && normalizeName(n.fullName) === target && n.birthDate === birthDate,
+    );
+    if (node) return { tree, node, ...getParents(tree, node.id) };
+  }
+  return null;
+}
+
+export function claimNode(state: ShajaraState, treeId: string, nodeId: string, user: User): ShajaraState {
+  return {
+    ...state,
+    activeTreeId: treeId,
+    user: { ...user, nodeId },
+    trees: state.trees.map((t) =>
+      t.id !== treeId
+        ? t
+        : {
+            ...t,
+            nodes: t.nodes.map((n) => (n.id === nodeId ? { ...n, claimedBy: user.id } : n)),
+            members: { ...t.members, [user.id]: "Viewer" },
+          },
+    ),
+  };
+}
+
+export function createOwnTree(state: ShajaraState, user: User): ShajaraState {
+  const node: PersonNode = {
+    id: uid(),
+    fullName: user.fullName,
+    birthDate: user.birthDate,
+    gender: "male",
+    claimedBy: user.id,
+  };
+  const tree: Tree = {
+    id: uid(),
+    name: `${user.fullName.split(" ")[0]} shajarasi`,
+    ownerId: user.id,
+    nodes: [node],
+    edges: [],
+    members: { [user.id]: "Owner" },
+  };
+  return { trees: [...state.trees, tree], activeTreeId: tree.id, user: { ...user, nodeId: node.id } };
+}
+
+export function seedState(): ShajaraState {
+  const gf: PersonNode = { id: "n-gf", fullName: "Rustam Yusupov", birthDate: "1938-01-15", deathDate: "2010-09-02", gender: "male", claimedBy: null, notes: "Samarqandda bog'bon bo'lib ishlagan." };
+  const gm: PersonNode = { id: "n-gm", fullName: "Saodat Yusupova", birthDate: "1942-04-10", deathDate: "2015-12-20", gender: "female", claimedBy: null };
+  const mgf: PersonNode = { id: "n-mgf", fullName: "Anvar Qodirov", birthDate: "1940-06-01", deathDate: "2005-03-11", gender: "male", claimedBy: null };
+  const mgm: PersonNode = { id: "n-mgm", fullName: "Gulnora Qodirova", birthDate: "1944-02-22", gender: "female", claimedBy: null };
+  const f: PersonNode = { id: "n-father", fullName: "Karim Yusupov", birthDate: "1965-03-12", gender: "male", claimedBy: "u-karim", metadata: { "Kasbi": "Muhandis" } };
+  const m: PersonNode = { id: "n-mother", fullName: "Dilnoza Yusupova", birthDate: "1968-07-04", gender: "female", claimedBy: "u-dilnoza" };
+  const cousin: PersonNode = { id: "n-cousin", fullName: "Jasur Qodirov", birthDate: "1990-09-14", gender: "male", claimedBy: null };
+  const sis: PersonNode = { id: "n-sister", fullName: "Malika Yusupova", birthDate: "1998-11-08", gender: "female", claimedBy: null };
+  const c: PersonNode = { id: "n-child", fullName: "Aziz Yusupov", birthDate: "1995-05-20", gender: "male", claimedBy: null };
+  return {
+    activeTreeId: null,
+    user: null,
+    trees: [
+      {
+        id: "t-yusupov",
+        name: "Yusupovlar shajarasi",
+        ownerId: "u-karim",
+        nodes: [gf, gm, mgf, mgm, f, m, c, sis, cousin],
+        edges: [
+          { id: "e4", from: gf.id, to: gm.id, type: "spouse" },
+          { id: "e5", from: gf.id, to: f.id, type: "parent" },
+          { id: "e6", from: gm.id, to: f.id, type: "parent" },
+          { id: "e7", from: mgf.id, to: mgm.id, type: "spouse" },
+          { id: "e8", from: mgf.id, to: m.id, type: "parent" },
+          { id: "e9", from: mgm.id, to: m.id, type: "parent" },
+          { id: "e10", from: f.id, to: sis.id, type: "parent" },
+          { id: "e11", from: m.id, to: sis.id, type: "parent" },
+          { id: "e1", from: f.id, to: m.id, type: "spouse" },
+          { id: "e2", from: f.id, to: c.id, type: "parent" },
+          { id: "e3", from: m.id, to: c.id, type: "parent" },
+        ],
+        members: { "u-karim": "Owner", "u-dilnoza": "Editor" },
+      },
+    ],
+  };
+}
+
+export function loadState(): ShajaraState {
+  if (typeof window === "undefined") return seedState();
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return seedState();
+    const parsed = JSON.parse(raw) as ShajaraState;
+    if (!Array.isArray(parsed.trees)) return seedState();
+    return parsed;
+  } catch {
+    return seedState();
+  }
+}
+
+export function saveState(state: ShajaraState): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+export interface Collaborator {
+  userId: string;
+  name: string;
+  role: Role;
+}
+
+/** A person is "in tree" when at least one relationship links them to someone. */
+export function isInTree(tree: Pick<Tree, "edges">, nodeId: string): boolean {
+  return tree.edges.some((e) => e.from === nodeId || e.to === nodeId);
+}
+
+export function listCollaborators(tree: Tree, current: User | null): Collaborator[] {
+  return Object.entries(tree.members).map(([userId, role]) => ({
+    userId,
+    role,
+    name:
+      current?.id === userId
+        ? current.fullName
+        : tree.memberNames?.[userId] ?? tree.nodes.find((n) => n.claimedBy === userId)?.fullName ?? userId,
+  }));
+}
+
+export class LastOwnerError extends Error {
+  constructor() {
+    super("LAST_OWNER");
+    this.name = "LastOwnerError";
+  }
+}
+
+/** Only an Owner may change roles; the tree must always keep at least one Owner. */
+export function setMemberRole(tree: Tree, actorRole: Role | null, userId: string, role: Role): Tree {
+  if (actorRole !== "Owner") throw new PermissionError("OWNER_ONLY");
+  if (!(userId in tree.members)) return tree;
+  const owners = Object.values(tree.members).filter((r) => r === "Owner").length;
+  if (tree.members[userId] === "Owner" && role !== "Owner" && owners <= 1) throw new LastOwnerError();
+  return { ...tree, members: { ...tree.members, [userId]: role } };
+}
+
+/** Trees the user belongs to. */
+export function userTrees(state: ShajaraState): Tree[] {
+  const u = state.user;
+  return u ? state.trees.filter((t) => u.id in t.members) : [];
+}
+
+/** Switch active tree; the user's own card is whichever node they claimed there. */
+export function switchTree(state: ShajaraState, treeId: string): ShajaraState {
+  const u = state.user;
+  const tree = state.trees.find((t) => t.id === treeId);
+  if (!u || !tree || !(u.id in tree.members)) return state;
+  const nodeId = tree.nodes.find((n) => n.claimedBy === u.id)?.id ?? null;
+  return { ...state, activeTreeId: treeId, user: { ...u, nodeId } };
+}
+
+/** Create a new tree owned by the signed-in user, starting with their own card. */
+export function createNamedTree(state: ShajaraState, name: string): ShajaraState {
+  const u = state.user;
+  const trimmed = name.trim();
+  if (!u || !trimmed) return state;
+  const node: PersonNode = { id: uid(), fullName: u.fullName, birthDate: u.birthDate, gender: "male", claimedBy: u.id };
+  const tree: Tree = { id: uid(), name: trimmed, ownerId: u.id, nodes: [node], edges: [], members: { [u.id]: "Owner" } };
+  return { ...state, trees: [...state.trees, tree], activeTreeId: tree.id, user: { ...u, nodeId: node.id } };
+}
+
+/** Only an Owner may rename a tree. */
+export function renameTree(tree: Tree, actorRole: Role | null, name: string): Tree {
+  if (actorRole !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const trimmed = name.trim();
+  return trimmed ? { ...tree, name: trimmed } : tree;
+}
+
+/** Only an Owner may delete a tree; the user must keep at least one tree. */
+export function deleteTree(state: ShajaraState, treeId: string): ShajaraState {
+  const u = state.user;
+  const tree = state.trees.find((t) => t.id === treeId);
+  if (!u || !tree) return state;
+  if (tree.members[u.id] !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const remaining = userTrees(state).filter((t) => t.id !== treeId);
+  if (remaining.length === 0) throw new LastOwnerError();
+  return switchTree({ ...state, trees: state.trees.filter((t) => t.id !== treeId) }, remaining[0]!.id);
+}
+
+/** Only an Owner may invite; invited collaborators are added with the chosen role. */
+export function inviteMember(tree: Tree, actorRole: Role | null, name: string, role: Role): Tree {
+  if (actorRole !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const trimmed = name.trim();
+  if (!trimmed) return tree;
+  const id = `u-${uid()}`;
+  return { ...tree, members: { ...tree.members, [id]: role }, memberNames: { ...(tree.memberNames ?? {}), [id]: trimmed } };
+}
