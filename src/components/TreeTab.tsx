@@ -114,12 +114,13 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
       collapsed: collapsed.has(p.id),
       onToggle: toggle,
       foldLabel: collapsed.has(p.id) ? t("unfold") : t("fold"),
+      parentCardViewMode,
     },
     style: compact ? CARD_SIZE.compact : CARD_SIZE.full,
   }));
 
   const flowEdges: FlowEdge[] = edges
-    .filter((e) => !hidden.has(e.from) && !hidden.has(e.to))
+    .filter((e) => !hidden.has(e.from) && !hidden.has(e.to) && !e.hideOnCanvas)
     .map((e) => {
       const branch = colorByBranch ? edgeBranch(branches, e) : "neutral";
       const spouse = e.type === "spouse";
