@@ -17,9 +17,9 @@ export function ImportSheetDialog({ open, onOpenChange }: { open: boolean; onOpe
     setRows(r);
   };
 
-  const loadLink = async () => {
+  const loadLink = async (): Promise<void> => {
     const url = sheetCsvUrl(link);
-    if (!url) return toast.error(t("importError"));
+    if (!url) { toast.error(t("importError")); return; }
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error();
