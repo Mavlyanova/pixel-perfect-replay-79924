@@ -15,7 +15,7 @@ type TimelineEvent = {
 };
 
 export function TimeTravelView() {
-  const { nodes, edges, lang } = useShajara();
+  const { nodes, edges, t } = useShajara();
   const [search, setSearch] = useState("");
   const [century, setCentury] = useState("all");
 
@@ -24,11 +24,11 @@ export function TimeTravelView() {
     nodes.forEach(n => {
       if (n.birthDate) {
         const y = parseInt(n.birthDate.substring(0, 4), 10);
-        if (!isNaN(y)) evs.push({ id: `b-${n.id}`, year: y, type: "birth", title: lang === "uz" ? `${n.fullName} tug'ildi` : `Birth of ${n.fullName}`, description: n.birthDate, avatar: n.avatarUrl });
+        if (!isNaN(y)) evs.push({ id: `b-${n.id}`, year: y, type: "birth", title: `${n.fullName} ${t("born")}`, description: n.birthDate, avatar: n.avatarUrl });
       }
       if (n.deathDate) {
         const y = parseInt(n.deathDate.substring(0, 4), 10);
-        if (!isNaN(y)) evs.push({ id: `d-${n.id}`, year: y, type: "death", title: lang === "uz" ? `${n.fullName} vafot etdi` : `Death of ${n.fullName}`, description: n.deathDate, avatar: n.avatarUrl });
+        if (!isNaN(y)) evs.push({ id: `d-${n.id}`, year: y, type: "death", title: `${n.fullName} ${t("died")}`, description: n.deathDate, avatar: n.avatarUrl });
       }
     });
     edges.forEach(e => {
@@ -37,12 +37,12 @@ export function TimeTravelView() {
         const p1 = nodes.find(n => n.id === e.from);
         const p2 = nodes.find(n => n.id === e.to);
         if (!isNaN(y) && p1 && p2) {
-          evs.push({ id: `m-${e.id}`, year: y, type: "marriage", title: lang === "uz" ? `${p1.fullName} va ${p2.fullName} turmush qurdilar` : `Marriage of ${p1.fullName} & ${p2.fullName}`, description: lang === "uz" ? `Yil: ${y}` : `Year: ${y}` });
+          evs.push({ id: `m-${e.id}`, year: y, type: "marriage", title: `${p1.fullName} & ${p2.fullName} ${t("married")}`, description: `${t("year")}: ${y}` });
         }
       }
     });
     return evs.sort((a, b) => a.year - b.year);
-  }, [nodes, edges, lang]);
+  }, [nodes, edges, t]);
 
   const filtered = useMemo(() => {
     return events.filter(e => {
@@ -60,24 +60,24 @@ export function TimeTravelView() {
       <div className="flex gap-4 items-center">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder={lang === "uz" ? "Voqea yoki ism izlash..." : "Search event or name..."} value={search} onChange={e => setSearch(e.target.value)} />
+          <Input className="pl-9" placeholder={t("searchEvent")} value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={century} onValueChange={setCentury}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={lang === "uz" ? "Asrni tanlang" : "Select century"} />
+            <SelectValue placeholder={t("selectCentury")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{lang === "uz" ? "Barcha davrlar" : "All times"}</SelectItem>
-            <SelectItem value="1800">19-asr (1800-1899)</SelectItem>
-            <SelectItem value="1900">20-asr (1900-1999)</SelectItem>
-            <SelectItem value="2000">21-asr (2000-2099)</SelectItem>
+            <SelectItem value="all">{t("allTimes")}</SelectItem>
+            <SelectItem value="1800">{t("century19")}</SelectItem>
+            <SelectItem value="1900">{t("century20")}</SelectItem>
+            <SelectItem value="2000">{t("century21")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="flex-1 overflow-y-auto pr-4 pb-12">
         <div className="relative border-l-2 border-primary/30 ml-4 space-y-8 pb-8 mt-4">
           {filtered.length === 0 ? (
-            <p className="pl-6 text-muted-foreground pt-4">{lang === "uz" ? "Hech qanday voqea topilmadi." : "No events found."}</p>
+            <p className="pl-6 text-muted-foreground pt-4">{t("noEvents")}</p>
           ) : (
             filtered.map(e => (
               <div key={e.id} className="relative pl-6 group">
