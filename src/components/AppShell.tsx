@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronsLeft, ChevronsRight, GitFork, LogOut, Moon, Settings, Sun, Users } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, GitFork, LogOut, Moon, Settings, Sun, Users, History, MapPin } from "lucide-react";
 import { useShajara } from "@/context/ShajaraContext";
 import { LANGS, type Lang, type TranslationKey } from "@/i18n/translations";
 import { OnboardingModal } from "@/components/OnboardingModal";
@@ -7,6 +7,8 @@ import { TreeTab } from "@/components/TreeTab";
 import { PeopleTab } from "@/components/PeopleTab";
 import { SettingsTab, LANG_LABEL } from "@/components/SettingsTab";
 import { TreeSwitcher } from "@/components/TreeSwitcher";
+import { TimeTravelView } from "@/components/TimeTravelView";
+import { GeographyView } from "@/components/GeographyView";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -21,7 +23,7 @@ const THEME_KEY = "shajara:theme";
 const SIDEBAR_KEY = "shajara:sidebar";
 
 export function AppShell() {
-  const { ready, t, lang, setLang, isAuthenticated, user, activeTree, currentRole, nodes, logout } = useShajara();
+  const { ready, t, lang, setLang, isAuthenticated, user, activeTree, currentRole, nodes, logout, activeSidebarView, setActiveSidebarView } = useShajara();
   const [tab, setTab] = useState<Tab>("tabTree");
   const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
   const [dark, setDark] = useState(false);
@@ -46,6 +48,7 @@ export function AppShell() {
   const focusPerson = (nodeId: string) => {
     setFocusNodeId(nodeId);
     setTab("tabTree");
+    setActiveSidebarView("default");
   };
 
   const langPicker = (
@@ -100,14 +103,33 @@ export function AppShell() {
           {TABS.map(({ key, icon: Icon }) => (
             <button
               key={key}
-              onClick={() => setTab(key)}
-              title={t(key)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${tab === key ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"}`}
+              onClick={() => { setTab(key); setActiveSidebarView("default"); }}
+              title={t(key as TranslationKey)}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${tab === key && activeSidebarView === "default" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"}`}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && t(key)}
+              {!collapsed && t(key as TranslationKey)}
             </button>
           ))}
+        </nav>
+        <div className="mx-4 my-2 h-px bg-sidebar-border opacity-50" />
+        <nav className="flex flex-col gap-1 px-2">
+          <button
+            onClick={() => setActiveSidebarView("time-travel")}
+            title="Vaqt Sayohati"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${activeSidebarView === "time-travel" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"}`}
+          >
+            <History className="h-4 w-4 shrink-0" />
+            {!collapsed && "Vaqt Sayohati"}
+          </button>
+          <button
+            onClick={() => setActiveSidebarView("geography")}
+            title="Tug'ilgan Joylar"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${activeSidebarView === "geography" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "hover:bg-sidebar-accent"}`}
+          >
+            <MapPin className="h-4 w-4 shrink-0" />
+            {!collapsed && "Tug'ilgan Joylar"}
+          </button>
         </nav>
         <div className="mt-auto space-y-2 border-t border-sidebar-border p-3">
           {!collapsed && (
@@ -131,8 +153,8 @@ export function AppShell() {
             {TABS.map(({ key }) => (
               <button
                 key={key}
-                onClick={() => setTab(key)}
-                className={`px-4 py-2 text-sm transition-colors ${tab === key ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => { setTab(key); setActiveSidebarView("default"); }}
+                className={`px-4 py-2 text-sm transition-colors ${tab === key && activeSidebarView === "default" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {t(key as TranslationKey)}
               </button>
@@ -150,7 +172,17 @@ export function AppShell() {
             <p className="text-sm text-muted-foreground">{t("welcome", { name: user?.fullName ?? "" })}</p>
             <h2 className="font-display text-4xl text-foreground">{activeTree?.name}</h2>
           </div>
-          {tab === "tabTree" ? <TreeTab focusNodeId={focusNodeId} onFocusComplete={() => setFocusNodeId(null)} /> : tab === "tabPeople" ? <PeopleTab onFocusPerson={focusPerson} /> : <SettingsTab />}
+          {activeSidebarView === "time-travel" ? (
+            <TimeTravelView />
+          ) : activeSidebarView === "geography" ? (
+            <GeographyView />
+          ) : tab === "tabTree" ? (
+            <TreeTab focusNodeId={focusNodeId} onFocusComplete={() => setFocusNodeId(null)} />
+          ) : tab === "tabPeople" ? (
+            <PeopleTab onFocusPerson={focusPerson} />
+          ) : (
+            <SettingsTab />
+          )}
         </main>
       </div>
     </div>

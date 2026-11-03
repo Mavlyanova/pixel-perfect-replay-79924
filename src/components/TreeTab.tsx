@@ -41,7 +41,7 @@ type Pos = Record<string, { x: number; y: number }>;
 type TreeFocusProps = { focusNodeId?: string | null; onFocusComplete?: () => void };
 
 function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
-  const { t, nodes, edges, user, currentRole, reconnectEdge, removeEdge, addEdge } = useShajara();
+  const { t, lang, nodes, edges, user, currentRole, reconnectEdge, removeEdge, addEdge, parentCardViewMode, setParentCardViewMode } = useShajara();
   const canEdit = canMutate(currentRole);
   const rf = useReactFlow();
   const initialFitView = useRef(!focusNodeId);
@@ -67,7 +67,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   }, [visibleNodes, edges, direction, compact, rf, focusNodeId]);
 
   // Re-layout whenever structure / mode changes.
-  const structureKey = `${direction}|${compact}|${visibleNodes.map((n) => n.id).join(",")}|${edges.map((e) => `${e.from}>${e.to}`).join(",")}`;
+  const structureKey = `${direction}|${compact}|${parentCardViewMode}|${visibleNodes.map((n) => n.id).join(",")}|${edges.map((e) => `${e.from}>${e.to}`).join(",")}`;
   useEffect(() => {
     relayout();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -129,7 +129,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
         target: e.to,
         sourceHandle: spouse ? "s-out" : null,
         targetHandle: spouse ? "s-in" : null,
-        type: spouse ? "straight" : ortho ? "smoothstep" : "default",
+        type: spouse ? "straight" : parentCardViewMode === "combined" ? "smoothstep" : ortho ? "smoothstep" : "default",
         reconnectable: canEdit && !spouse,
         style: { stroke: `var(--branch-${branch})`, strokeWidth: 2, ...(spouse ? { strokeDasharray: "6 4" } : {}) },
       };
@@ -263,6 +263,10 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
         <div className="flex items-center gap-2">
           <Switch id="branch" checked={colorByBranch} onCheckedChange={setColorByBranch} />
           <Label htmlFor="branch">{t("colorByBranch")}</Label>
+        </div>
+        <div className="flex items-center gap-2 ml-4">
+          <Switch id="viewMode" checked={parentCardViewMode === "combined"} onCheckedChange={(c) => setParentCardViewMode(c ? "combined" : "separated")} />
+          <Label htmlFor="viewMode">{lang === "uz" ? "Birlashgan Ota-onalar" : "Combined Parents"}</Label>
         </div>
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={relayout}><LayoutGrid className="mr-1 h-4 w-4" />{t("resetLayout")}</Button>
