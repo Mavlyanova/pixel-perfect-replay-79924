@@ -43,7 +43,7 @@ export function TreeSwitcher() {
   return (
     <div className="space-y-1">
       <p className="text-xs text-muted-foreground">{t("activeTree")}</p>
-      <Select value={activeTree?.id} onValueChange={switchTree}>
+      <Select value={activeTree?.id ?? ""} onValueChange={switchTree}>
         <SelectTrigger className="h-9" aria-label={t("switchTree")}>
           <SelectValue />
         </SelectTrigger>
