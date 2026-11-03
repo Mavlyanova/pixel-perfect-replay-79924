@@ -158,6 +158,11 @@ const uz = {
   addCityBtn: "Shahar qo'shish",
   addRegionBtn: "Viloyat qo'shish",
   familyJourney: "Oilaviy Migratsiya Xaritasi",
+  marriageYear: "Turmush yili",
+  divorceYear: "Ajrashgan yili",
+  statusDivorced: "Ajrashgan",
+  statusMarried: "Turmush qurgan",
+  noParentsForSibling: "Aka-uka/opa-singil qo'shish uchun avval ularning ota-onasini qo'shing",
 
 
 };
@@ -321,6 +326,11 @@ const ru: Dict = {
   addCityBtn: "Добавить город",
   addRegionBtn: "Добавить регион",
   familyJourney: "Карта миграции семьи",
+  marriageYear: "Год брака",
+  divorceYear: "Год развода",
+  statusDivorced: "В разводе",
+  statusMarried: "В браке",
+  noParentsForSibling: "Добавьте родителя текущего человека, прежде чем добавлять брата/сестру",
 
 
 };
@@ -481,6 +491,11 @@ const en: Dict = {
   addCityBtn: "Add City",
   addRegionBtn: "Add Region",
   familyJourney: "Family Migration Map",
+  marriageYear: "Marriage Year",
+  divorceYear: "Divorce Year",
+  statusDivorced: "Divorced",
+  statusMarried: "Married",
+  noParentsForSibling: "Please add a parent to this person first before adding a sibling",
 
 
 };
