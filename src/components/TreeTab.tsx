@@ -162,7 +162,10 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
 
   const onConnect = useCallback(
     (conn: Connection) => {
-      if (!canEdit) return toast.error(t("viewerWarning"));
+      if (!canEdit) {
+        toast.error(t("viewerWarning"));
+        return;
+      }
       if (!conn.source || !conn.target || conn.source === conn.target) return;
       setPending({ a: conn.source, b: conn.target, spouseHandle: conn.targetHandle === "s-in" });
     },
