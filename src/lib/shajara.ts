@@ -20,6 +20,9 @@ export interface Edge {
   from: string; // parent (for "parent")
   to: string; // child (for "parent")
   type: EdgeType;
+  marriageYear?: number | string;
+  divorceYear?: number | string;
+  hideOnCanvas?: boolean;
 }
 
 export interface User {

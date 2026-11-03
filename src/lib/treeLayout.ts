@@ -93,11 +93,11 @@ export function layoutPositions(
   compact: boolean,
   parentCardViewMode: 'combined' | 'separated' = 'separated'
 ): Record<string, { x: number; y: number }> {
-  const spouseGap = parentCardViewMode === 'combined' ? 16 : SPOUSE_GAP;
+  const spouseGap = parentCardViewMode === 'combined' ? 0 : SPOUSE_GAP;
   const size = compact ? CARD_SIZE.compact : CARD_SIZE.full;
   const horizontal = direction === "TB" || direction === "BT";
   const ids = new Set(nodes.map((n) => n.id));
-  const visible = edges.filter((e) => ids.has(e.from) && ids.has(e.to));
+  const visible = edges.filter((e) => ids.has(e.from) && ids.has(e.to) && !e.hideOnCanvas);
 
   // Group spouses into units (male partner first for a stable order).
   const unitOf = new Map<string, string>();
@@ -106,7 +106,17 @@ export function layoutPositions(
   for (const n of nodes) {
     if (unitOf.has(n.id)) continue;
     const members = [...walk([n.id], (x) => spousesOf(visible, x))];
-    members.sort((a, b) => (byId.get(a)!.gender === "male" ? 0 : 1) - (byId.get(b)!.gender === "male" ? 0 : 1));
+    if (members.length === 3) {
+      const hub = members.find(m => spousesOf(visible, m).length > 1);
+      if (hub) {
+        const others = members.filter(m => m !== hub);
+        members = [others[0], hub, others[1]];
+      } else {
+        members.sort((a, b) => (byId.get(a)!.gender === "male" ? 0 : 1) - (byId.get(b)!.gender === "male" ? 0 : 1));
+      }
+    } else {
+      members.sort((a, b) => (byId.get(a)!.gender === "male" ? 0 : 1) - (byId.get(b)!.gender === "male" ? 0 : 1));
+    }
     units.set(n.id, members);
     members.forEach((m) => unitOf.set(m, n.id));
   }
