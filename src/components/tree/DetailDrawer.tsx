@@ -3,17 +3,17 @@ import { toast } from "sonner";
 import { ExternalLink, Trash2, X } from "lucide-react";
 import { useShajara } from "@/context/ShajaraContext";
 import { canMutate, type Gender } from "@/lib/shajara";
-import { lifespan, spousesOf } from "@/lib/treeLayout";
+import { lifespan, spousesOf, parentsOf } from "@/lib/treeLayout";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type Rel = "parent" | "child" | "spouse";
+type Rel = "parent" | "child" | "spouse" | "sibling";
 
 export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClose: () => void }) {
-  const { t, nodes, edges, currentRole, updateNode, addNode, addEdge, removeNode, user } = useShajara();
+  const { t, nodes, edges, currentRole, updateNode, addNode, addEdge, updateEdge, removeEdge, removeNode, user } = useShajara();
   const person = nodes.find((n) => n.id === nodeId) ?? null;
   const canEdit = canMutate(currentRole);
 
@@ -125,15 +125,46 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
 
             <section className="space-y-2">
               <h3 className="drawer-heading">{t("spouses")}</h3>
-              {spouses.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("none")}</p>
-              ) : (
-                <ul className="space-y-1">
-                  {spouses.map((s) => (
-                    <li key={s!.id} className="rounded-md bg-muted px-3 py-2 text-sm">{s!.fullName} <span className="text-muted-foreground">({lifespan(s!)})</span></li>
-                  ))}
-                </ul>
-              )}
+              {(() => {
+                const spouseEdges = person ? edges.filter((e) => e.type === "spouse" && (e.from === person.id || e.to === person.id)) : [];
+                if (spouseEdges.length === 0) return <p className="text-sm text-muted-foreground">{t("none")}</p>;
+                return (
+                  <ul className="space-y-3">
+                    {spouseEdges.map((se) => {
+                      const spId = se.from === person.id ? se.to : se.from;
+                      const sp = nodes.find(n => n.id === spId);
+                      if (!sp) return null;
+                      return (
+                        <li key={se.id} className="rounded-md border border-border p-3 space-y-2 shadow-sm bg-card">
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <p className="font-medium text-sm">{sp.fullName} <span className="text-muted-foreground font-normal">({lifespan(sp)})</span></p>
+                              <p className={`text-xs font-semibold mt-0.5 ${se.divorceYear ? "text-destructive" : "text-primary"}`}>{se.divorceYear ? t("statusDivorced") : t("statusMarried")}</p>
+                            </div>
+                            {canEdit && (
+                              <button aria-label="remove" onClick={() => guard(() => removeEdge(se.id))} className="text-muted-foreground hover:text-destructive">
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          {canEdit && (
+                            <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                              <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("marriageYear")}</Label>
+                                <Input className="h-8 text-xs bg-background" placeholder="YYYY" defaultValue={se.marriageYear as string || ""} onBlur={(e) => guard(() => updateEdge(se.id, { marriageYear: e.target.value }))} />
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("divorceYear")}</Label>
+                                <Input className="h-8 text-xs bg-background" placeholder="YYYY" defaultValue={se.divorceYear as string || ""} onBlur={(e) => guard(() => updateEdge(se.id, { divorceYear: e.target.value }))} />
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              })()}
             </section>
 
             <section className="space-y-2">
@@ -209,10 +240,10 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
             {canEdit && (
               <section className="space-y-2 rounded-lg border border-border p-4">
                 <h3 className="drawer-heading">{t("addRelative")}</h3>
-                <div className="grid grid-cols-3 gap-1">
-                  {(["parent", "child", "spouse"] as Rel[]).map((r) => (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+                  {(["parent", "child", "spouse", "sibling"] as Rel[]).map((r) => (
                     <Button key={r} size="sm" variant={rel === r ? "default" : "outline"} onClick={() => setRel(r)}>
-                      {t(r === "parent" ? "relParent" : r === "child" ? "relChild" : "relSpouse")}
+                      {t(r === "parent" ? "relParent" : r === "child" ? "relChild" : r === "spouse" ? "relSpouse" : "relSibling")}
                     </Button>
                   ))}
                 </div>
@@ -235,6 +266,10 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                 </div>
                 <Button className="w-full" onClick={() => {
                   if (!relName.trim() || !relBirth) { toast.error(t("required")); return; }
+                  if (rel === "sibling" && parentsOf(edges, person.id).length === 0) {
+                    toast.error(t("noParentsForSibling"));
+                    return;
+                  }
                   guard(() => {
                     const n = addNode({ fullName: relName.trim(), birthDate: relBirth, gender: relGender });
                     if (rel === "parent") addEdge({ from: n.id, to: person.id, type: "parent" });
@@ -243,6 +278,10 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                       if (otherParent) addEdge({ from: otherParent, to: n.id, type: "parent" });
                     }
                     if (rel === "spouse") addEdge({ from: person.id, to: n.id, type: "spouse" });
+                    if (rel === "sibling") {
+                      const pIds = parentsOf(edges, person.id);
+                      pIds.forEach(pId => addEdge({ from: pId, to: n.id, type: "parent" }));
+                    }
                   });
                   setRelName(""); setRelBirth("");
                 }}>{t("add")}</Button>
