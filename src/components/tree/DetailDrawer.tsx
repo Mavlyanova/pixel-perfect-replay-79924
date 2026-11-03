@@ -86,7 +86,7 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                     <Label htmlFor="p-birth">{t("birthDate")}</Label>
                     <Input id="p-birth" type="date" value={pBirth} onChange={(e) => setPBirth(e.target.value)} />
                   </div>
-                  <div className="space-y-1">
+                  <div className="flex flex-col gap-1">
                     <Label htmlFor="p-gender">{t("gender")}</Label>
                     <select id="p-gender" className="field-select h-10" value={pGender} onChange={(e) => setPGender(e.target.value as Gender)}>
                       <option value="male">{t("male")}</option>

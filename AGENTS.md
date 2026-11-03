@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep cross-tab person focus as transient AppShell state passed to PeopleTab and TreeTab; the canvas consumes it after measured-node fitView completes to avoid replaying focus on later visits.
+- Tree workspace rules (create/switch/rename/delete/invite) live as pure functions in src/lib/shajara.ts and are wrapped by ShajaraContext; why: keeps owner-only rules testable without the UI.
