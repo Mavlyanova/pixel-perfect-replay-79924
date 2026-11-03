@@ -27,6 +27,10 @@ import { DEFAULT_LANG, translate, type Lang, type TranslationKey } from "@/i18n/
 
 const LANG_KEY = "shajara:lang";
 
+
+export type ParentCardViewMode = 'combined' | 'separated';
+export type SidebarView = 'default' | 'time-travel' | 'geography';
+
 interface Ctx {
   ready: boolean;
   lang: Lang;
@@ -46,6 +50,7 @@ interface Ctx {
   addEdge: (edge: Omit<Edge, "id">) => Edge;
   removeNode: (id: string) => void;
   updateNode: (id: string, patch: Partial<Omit<PersonNode, "id">>) => void;
+  updateEdge: (id: string, patch: Partial<Omit<Edge, "id">>) => void;
   removeEdge: (id: string) => void;
   reconnectEdge: (id: string, from: string, to: string) => void;
   changeRole: (userId: string, role: Role) => void;
@@ -55,6 +60,10 @@ interface Ctx {
   renameTree: (name: string) => void;
   deleteTree: (id: string) => void;
   invite: (name: string, role: Role) => void;
+  parentCardViewMode: ParentCardViewMode;
+  setParentCardViewMode: (mode: ParentCardViewMode) => void;
+  activeSidebarView: SidebarView;
+  setActiveSidebarView: (view: SidebarView) => void;
 }
 
 const ShajaraContext = createContext<Ctx | null>(null);
@@ -63,6 +72,9 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ShajaraState>(seedState);
   const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
   const [ready, setReady] = useState(false);
+  const [parentCardViewMode, setParentCardViewMode] = useState<ParentCardViewMode>("combined");
+  const [activeSidebarView, setActiveSidebarView] = useState<SidebarView>("default");
+
 
   useEffect(() => {
     setState(loadState());
@@ -139,6 +151,7 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
         })),
       updateNode: (id, patch) =>
         mutateTree((tr) => ({ ...tr, nodes: tr.nodes.map((n) => (n.id === id ? { ...n, ...patch } : n)) })),
+      updateEdge: (id, patch) => mutateTree((tr) => ({ ...tr, edges: tr.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
       removeEdge: (id) => mutateTree((tr) => ({ ...tr, edges: tr.edges.filter((e) => e.id !== id) })),
       reconnectEdge: (id, from, to) =>
         mutateTree((tr) => ({ ...tr, edges: tr.edges.map((e) => (e.id === id ? { ...e, from, to } : e)) })),
@@ -164,8 +177,12 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
         const next = inviteMember(activeTree, currentRole, name, role);
         setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === next.id ? next : tr)) }));
       },
+      parentCardViewMode,
+      setParentCardViewMode,
+      activeSidebarView,
+      setActiveSidebarView,
     }),
-    [ready, lang, setLang, t, state, activeTree, currentRole, mutateTree],
+    [ready, lang, setLang, t, state, activeTree, currentRole, mutateTree, parentCardViewMode, activeSidebarView],
   );
 
   return <ShajaraContext.Provider value={value}>{children}</ShajaraContext.Provider>;
