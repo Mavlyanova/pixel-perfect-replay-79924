@@ -163,6 +163,11 @@ const uz = {
   statusDivorced: "Ajrashgan",
   statusMarried: "Turmush qurgan",
   noParentsForSibling: "Aka-uka/opa-singil qo'shish uchun avval ularning ota-onasini qo'shing",
+  parents: "Ota-onasi",
+  showOnMap: "Xaritada ko'rsatish",
+  hideOnMap: "Xaritadan yashirilgan",
+  custodyHint: "Ajrashgan hollarda bola yashamaydigan ota-onani xaritadan yashirish mumkin.",
+
 
 
 };
@@ -331,6 +336,11 @@ const ru: Dict = {
   statusDivorced: "В разводе",
   statusMarried: "В браке",
   noParentsForSibling: "Добавьте родителя текущего человека, прежде чем добавлять брата/сестру",
+  parents: "Родители",
+  showOnMap: "Показывать на карте",
+  hideOnMap: "Скрыто на карте",
+  custodyHint: "В случае развода можно скрыть на карте родителя, с которым ребенок не живет.",
+
 
 
 };
@@ -496,6 +506,11 @@ const en: Dict = {
   statusDivorced: "Divorced",
   statusMarried: "Married",
   noParentsForSibling: "Please add a parent to this person first before adding a sibling",
+  parents: "Parents",
+  showOnMap: "Show on Map",
+  hideOnMap: "Hidden on Map",
+  custodyHint: "In case of divorce, you can hide the non-custodial parent's line on the map.",
+
 
 
 };
