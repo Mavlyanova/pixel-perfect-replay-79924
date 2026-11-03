@@ -2,6 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import {
   assertCanMutate,
   claimNode,
+  createNamedTree,
+  deleteTree as deleteTreeFn,
+  inviteMember,
+  renameTree as renameTreeFn,
+  switchTree as switchTreeFn,
+  userTrees,
   createOwnTree,
   findUnlinkedMatch,
   loadState,
@@ -43,6 +49,12 @@ interface Ctx {
   removeEdge: (id: string) => void;
   reconnectEdge: (id: string, from: string, to: string) => void;
   changeRole: (userId: string, role: Role) => void;
+  myTrees: Tree[];
+  switchTree: (id: string) => void;
+  createTree: (name: string) => void;
+  renameTree: (name: string) => void;
+  deleteTree: (id: string) => void;
+  invite: (name: string, role: Role) => void;
 }
 
 const ShajaraContext = createContext<Ctx | null>(null);
@@ -133,6 +145,23 @@ export function ShajaraProvider({ children }: { children: ReactNode }) {
       changeRole: (userId, role) => {
         if (!activeTree) return;
         const next = setMemberRole(activeTree, currentRole, userId, role);
+        setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === next.id ? next : tr)) }));
+      },
+      myTrees: userTrees(state),
+      switchTree: (id) => setState((s) => switchTreeFn(s, id)),
+      createTree: (name) => setState((s) => createNamedTree(s, name)),
+      renameTree: (name) => {
+        if (!activeTree) return;
+        const next = renameTreeFn(activeTree, currentRole, name);
+        setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === next.id ? next : tr)) }));
+      },
+      deleteTree: (id) => {
+        const next = deleteTreeFn(state, id);
+        setState(next);
+      },
+      invite: (name, role) => {
+        if (!activeTree) return;
+        const next = inviteMember(activeTree, currentRole, name, role);
         setState((s) => ({ ...s, trees: s.trees.map((tr) => (tr.id === next.id ? next : tr)) }));
       },
     }),

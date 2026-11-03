@@ -36,6 +36,7 @@ export interface Tree {
   nodes: PersonNode[];
   edges: Edge[];
   members: Record<string, Role>;
+  memberNames?: Record<string, string>;
 }
 
 export interface ShajaraState {
@@ -212,7 +213,7 @@ export function listCollaborators(tree: Tree, current: User | null): Collaborato
     name:
       current?.id === userId
         ? current.fullName
-        : tree.nodes.find((n) => n.claimedBy === userId)?.fullName ?? userId,
+        : tree.memberNames?.[userId] ?? tree.nodes.find((n) => n.claimedBy === userId)?.fullName ?? userId,
   }));
 }
 
@@ -230,4 +231,56 @@ export function setMemberRole(tree: Tree, actorRole: Role | null, userId: string
   const owners = Object.values(tree.members).filter((r) => r === "Owner").length;
   if (tree.members[userId] === "Owner" && role !== "Owner" && owners <= 1) throw new LastOwnerError();
   return { ...tree, members: { ...tree.members, [userId]: role } };
+}
+
+/** Trees the user belongs to. */
+export function userTrees(state: ShajaraState): Tree[] {
+  const u = state.user;
+  return u ? state.trees.filter((t) => u.id in t.members) : [];
+}
+
+/** Switch active tree; the user's own card is whichever node they claimed there. */
+export function switchTree(state: ShajaraState, treeId: string): ShajaraState {
+  const u = state.user;
+  const tree = state.trees.find((t) => t.id === treeId);
+  if (!u || !tree || !(u.id in tree.members)) return state;
+  const nodeId = tree.nodes.find((n) => n.claimedBy === u.id)?.id ?? null;
+  return { ...state, activeTreeId: treeId, user: { ...u, nodeId } };
+}
+
+/** Create a new tree owned by the signed-in user, starting with their own card. */
+export function createNamedTree(state: ShajaraState, name: string): ShajaraState {
+  const u = state.user;
+  const trimmed = name.trim();
+  if (!u || !trimmed) return state;
+  const node: PersonNode = { id: uid(), fullName: u.fullName, birthDate: u.birthDate, gender: "male", claimedBy: u.id };
+  const tree: Tree = { id: uid(), name: trimmed, ownerId: u.id, nodes: [node], edges: [], members: { [u.id]: "Owner" } };
+  return { ...state, trees: [...state.trees, tree], activeTreeId: tree.id, user: { ...u, nodeId: node.id } };
+}
+
+/** Only an Owner may rename a tree. */
+export function renameTree(tree: Tree, actorRole: Role | null, name: string): Tree {
+  if (actorRole !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const trimmed = name.trim();
+  return trimmed ? { ...tree, name: trimmed } : tree;
+}
+
+/** Only an Owner may delete a tree; the user must keep at least one tree. */
+export function deleteTree(state: ShajaraState, treeId: string): ShajaraState {
+  const u = state.user;
+  const tree = state.trees.find((t) => t.id === treeId);
+  if (!u || !tree) return state;
+  if (tree.members[u.id] !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const remaining = userTrees(state).filter((t) => t.id !== treeId);
+  if (remaining.length === 0) throw new LastOwnerError();
+  return switchTree({ ...state, trees: state.trees.filter((t) => t.id !== treeId) }, remaining[0].id);
+}
+
+/** Only an Owner may invite; invited collaborators are added with the chosen role. */
+export function inviteMember(tree: Tree, actorRole: Role | null, name: string, role: Role): Tree {
+  if (actorRole !== "Owner") throw new PermissionError("OWNER_ONLY");
+  const trimmed = name.trim();
+  if (!trimmed) return tree;
+  const id = `u-${uid()}`;
+  return { ...tree, members: { ...tree.members, [id]: role }, memberNames: { ...(tree.memberNames ?? {}), [id]: trimmed } };
 }
