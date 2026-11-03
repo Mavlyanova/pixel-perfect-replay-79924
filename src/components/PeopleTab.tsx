@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown, LocateFixed, Pencil } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CalendarPlus, Cake, FileSpreadsheet, LocateFixed, Pencil } from "lucide-react";
+import { buildBirthdayIcs, daysUntilBirthday, googleCalendarUrl } from "@/lib/familyIO";
+import { ImportSheetDialog } from "@/components/ImportSheetDialog";
+import { canMutate } from "@/lib/shajara";
 import { useShajara } from "@/context/ShajaraContext";
 import { isInTree } from "@/lib/shajara";
 import { DetailDrawer } from "@/components/tree/DetailDrawer";
@@ -17,7 +20,14 @@ const initials = (name: string) =>
   name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 export function PeopleTab({ onFocusPerson }: { onFocusPerson: (nodeId: string) => void }) {
-  const { t, nodes, edges, user } = useShajara();
+  const { t, nodes, edges, user, currentRole } = useShajara();
+  const [importOpen, setImportOpen] = useState(false);
+  const exportIcs = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([buildBirthdayIcs(nodes)], { type: "text/calendar" }));
+    a.download = "shajara-birthdays.ics";
+    a.click();
+  };
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "fullName", dir: 1 });
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -66,6 +76,12 @@ export function PeopleTab({ onFocusPerson }: { onFocusPerson: (nodeId: string) =
         {selected.size > 0 && (
           <span className="text-sm text-muted-foreground">{t("selected", { count: String(selected.size) })}</span>
         )}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportIcs}><CalendarPlus className="mr-1 h-4 w-4" />{t("exportBirthdays")}</Button>
+          {canMutate(currentRole) && (
+            <Button size="sm" onClick={() => setImportOpen(true)}><FileSpreadsheet className="mr-1 h-4 w-4" />{t("importSheet")}</Button>
+          )}
+        </div>
       </div>
       <div className="overflow-x-auto rounded-xl border border-border bg-card">
         <Table>
@@ -109,12 +125,22 @@ export function PeopleTab({ onFocusPerson }: { onFocusPerson: (nodeId: string) =
                   <TableCell>
                     <Badge variant={n.inTree ? "default" : "secondary"}>{n.inTree ? t("inTree") : t("notInTree")}</Badge>
                   </TableCell>
-                  <TableCell className="tabular-nums">{n.birthDate || "—"}</TableCell>
+                  <TableCell className="tabular-nums">
+                    {n.birthDate || "—"}
+                    {(() => { const d = n.deathDate ? null : daysUntilBirthday(n.birthDate); return d !== null && d <= 30 ? (
+                      <Badge variant="outline" className="ml-2 border-accent text-accent"><Cake className="mr-1 h-3 w-3" />{t("birthdaySoon", { days: String(d) })}</Badge>
+                    ) : null; })()}
+                  </TableCell>
                   <TableCell className="tabular-nums">{n.deathDate || "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => onFocusPerson(n.id)} aria-label={`${t("tabTree")}: ${n.fullName}`} title={`${t("tabTree")}: ${n.fullName}`}>
                       <LocateFixed className="h-4 w-4" />
                     </Button>
+                    {n.birthDate && !n.deathDate && (
+                      <Button asChild size="icon" variant="ghost" title={t("addToCalendar")}>
+                        <a href={googleCalendarUrl(n)} target="_blank" rel="noreferrer" aria-label={`${t("addToCalendar")}: ${n.fullName}`}><CalendarPlus className="h-4 w-4" /></a>
+                      </Button>
+                    )}
                     <Button size="sm" variant="ghost" onClick={() => setEditId(n.id)}>
                       <Pencil className="mr-1 h-3.5 w-3.5" /> {t("edit")}
                     </Button>
@@ -125,6 +151,7 @@ export function PeopleTab({ onFocusPerson }: { onFocusPerson: (nodeId: string) =
           </TableBody>
         </Table>
       </div>
+      <ImportSheetDialog open={importOpen} onOpenChange={setImportOpen} />
       <DetailDrawer nodeId={editId} onClose={() => setEditId(null)} />
     </div>
   );
