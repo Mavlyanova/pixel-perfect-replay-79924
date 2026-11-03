@@ -62,7 +62,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   const branches = useMemo(() => computeBranches(nodes, edges, user?.nodeId ?? null), [nodes, edges, user?.nodeId]);
 
   const relayout = useCallback(() => {
-    setPositions(layoutPositions(visibleNodes, edges, direction, compact));
+    setPositions(layoutPositions(visibleNodes, edges, direction, compact, parentCardViewMode));
     if (!focusNodeId) requestAnimationFrame(() => rf.fitView({ padding: 0.2, duration: 300 }));
   }, [visibleNodes, edges, direction, compact, rf, focusNodeId]);
 
@@ -266,7 +266,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
         </div>
         <div className="flex items-center gap-2 ml-4">
           <Switch id="viewMode" checked={parentCardViewMode === "combined"} onCheckedChange={(c) => setParentCardViewMode(c ? "combined" : "separated")} />
-          <Label htmlFor="viewMode">{lang === "uz" ? "Birlashgan Ota-onalar" : "Combined Parents"}</Label>
+          <Label htmlFor="viewMode">{t("combinedParents")}</Label>
         </div>
         <div className="ml-auto flex gap-2">
           <Button size="sm" variant="outline" onClick={relayout}><LayoutGrid className="mr-1 h-4 w-4" />{t("resetLayout")}</Button>
