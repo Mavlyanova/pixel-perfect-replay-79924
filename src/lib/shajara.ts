@@ -273,7 +273,7 @@ export function deleteTree(state: ShajaraState, treeId: string): ShajaraState {
   if (tree.members[u.id] !== "Owner") throw new PermissionError("OWNER_ONLY");
   const remaining = userTrees(state).filter((t) => t.id !== treeId);
   if (remaining.length === 0) throw new LastOwnerError();
-  return switchTree({ ...state, trees: state.trees.filter((t) => t.id !== treeId) }, remaining[0].id);
+  return switchTree({ ...state, trees: state.trees.filter((t) => t.id !== treeId) }, remaining[0]!.id);
 }
 
 /** Only an Owner may invite; invited collaborators are added with the chosen role. */
