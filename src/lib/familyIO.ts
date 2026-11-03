@@ -7,13 +7,13 @@ export function daysUntilBirthday(birthDate: string, today = new Date()): number
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
   if (!m) return null;
   const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  let next = new Date(base.getFullYear(), +m[2] - 1, +m[3]);
-  if (next < base) next = new Date(base.getFullYear() + 1, +m[2] - 1, +m[3]);
+  let next = new Date(base.getFullYear(), Number(m[2]) - 1, Number(m[3]));
+  if (next < base) next = new Date(base.getFullYear() + 1, Number(m[2]) - 1, Number(m[3]));
   return Math.round((next.getTime() - base.getTime()) / 86400000);
 }
 
 function nextDay(d: string) {
-  const [y, mo, da] = d.split("-").map(Number);
+  const [y = 0, mo = 1, da = 1] = d.split("-").map(Number);
   const n = new Date(Date.UTC(y, mo - 1, da + 1));
   return n.toISOString().slice(0, 10);
 }
@@ -82,7 +82,7 @@ export const CSV_TEMPLATE =
 
 export function rowsToPeople(rows: string[][]): ImportRow[] {
   if (!rows.length) return [];
-  const h = rows[0].map((x) => x.trim().toLowerCase());
+  const h = (rows[0] ?? []).map((x) => x.trim().toLowerCase());
   const col = (...names: string[]) => h.findIndex((x) => names.some((n) => x.includes(n)));
   const iName = col("name", "ism", "имя");
   const iGender = col("gender", "jins", "пол");
