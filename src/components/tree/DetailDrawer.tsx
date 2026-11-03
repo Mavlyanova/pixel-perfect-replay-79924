@@ -27,11 +27,34 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
   const [relBirth, setRelBirth] = useState("");
   const [relGender, setRelGender] = useState<Gender>("male");
   const [rel, setRel] = useState<Rel>("child");
+  const [otherParent, setOtherParent] = useState("");
+  const [pName, setPName] = useState("");
+  const [pBirth, setPBirth] = useState("");
+  const [pGender, setPGender] = useState<Gender>("male");
+  const [pAvatar, setPAvatar] = useState("");
 
   useEffect(() => {
     setNotes(person?.notes ?? "");
     setDeathDate(person?.deathDate ?? "");
   }, [person?.id, person?.notes, person?.deathDate]);
+
+  useEffect(() => {
+    setPName(person?.fullName ?? "");
+    setPBirth(person?.birthDate ?? "");
+    setPGender(person?.gender ?? "male");
+    setPAvatar(person?.avatarUrl ?? "");
+    setOtherParent("");
+  }, [person?.id, person?.fullName, person?.birthDate, person?.gender, person?.avatarUrl]);
+
+  const saveProfile = () => {
+    if (!person) return;
+    if (!pName.trim() || !pBirth) { toast.error(t("required")); return; }
+    if (pAvatar && !/^https?:\/\//.test(pAvatar.trim())) { toast.error(t("avatarUrl")); return; }
+    guard(() => {
+      updateNode(person.id, { fullName: pName.trim().replace(/\s+/g, " "), birthDate: pBirth, gender: pGender, avatarUrl: pAvatar.trim() || undefined });
+      toast.success(t("profileSaved"));
+    });
+  };
 
   const guard = (fn: () => void) => {
     try {
@@ -52,6 +75,33 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
               <SheetTitle className="font-display text-3xl">{person.fullName}</SheetTitle>
               <SheetDescription>{lifespan(person)}</SheetDescription>
             </SheetHeader>
+
+            {canEdit && (
+              <section className="space-y-2">
+                <h3 className="drawer-heading">{t("editProfile")}</h3>
+                <Label htmlFor="p-name">{t("fullName")}</Label>
+                <Input id="p-name" value={pName} onChange={(e) => setPName(e.target.value)} />
+                <div className="flex gap-2">
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor="p-birth">{t("birthDate")}</Label>
+                    <Input id="p-birth" type="date" value={pBirth} onChange={(e) => setPBirth(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="p-gender">{t("gender")}</Label>
+                    <select id="p-gender" className="field-select h-10" value={pGender} onChange={(e) => setPGender(e.target.value as Gender)}>
+                      <option value="male">{t("male")}</option>
+                      <option value="female">{t("female")}</option>
+                    </select>
+                  </div>
+                </div>
+                <Label htmlFor="p-avatar">{t("avatarUrl")}</Label>
+                <div className="flex items-center gap-2">
+                  {pAvatar && /^https?:\/\//.test(pAvatar) && <img src={pAvatar} alt="" className="h-10 w-10 rounded-full object-cover" />}
+                  <Input id="p-avatar" placeholder="https://" value={pAvatar} onChange={(e) => setPAvatar(e.target.value)} />
+                </div>
+                <Button className="w-full" variant="outline" onClick={saveProfile}>{t("save")}</Button>
+              </section>
+            )}
 
             <section className="space-y-2">
               <h3 className="drawer-heading">{t("notes")}</h3>
@@ -156,6 +206,15 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                     </Button>
                   ))}
                 </div>
+                {rel === "child" && spouses.length > 0 && (
+                  <div className="space-y-1">
+                    <Label htmlFor="other-parent">{t("otherParent")}</Label>
+                    <select id="other-parent" className="field-select w-full" value={otherParent} onChange={(e) => setOtherParent(e.target.value)}>
+                      <option value="">{t("noOtherParent")}</option>
+                      {spouses.map((sp) => <option key={sp!.id} value={sp!.id}>{sp!.fullName}</option>)}
+                    </select>
+                  </div>
+                )}
                 <Input placeholder={t("fullName")} value={relName} onChange={(e) => setRelName(e.target.value)} />
                 <div className="flex gap-2">
                   <Input type="date" value={relBirth} onChange={(e) => setRelBirth(e.target.value)} />
@@ -169,7 +228,10 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                   guard(() => {
                     const n = addNode({ fullName: relName.trim(), birthDate: relBirth, gender: relGender });
                     if (rel === "parent") addEdge({ from: n.id, to: person.id, type: "parent" });
-                    if (rel === "child") addEdge({ from: person.id, to: n.id, type: "parent" });
+                    if (rel === "child") {
+                      addEdge({ from: person.id, to: n.id, type: "parent" });
+                      if (otherParent) addEdge({ from: otherParent, to: n.id, type: "parent" });
+                    }
                     if (rel === "spouse") addEdge({ from: person.id, to: n.id, type: "spouse" });
                   });
                   setRelName(""); setRelBirth("");
