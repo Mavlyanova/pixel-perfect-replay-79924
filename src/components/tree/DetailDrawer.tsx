@@ -184,10 +184,19 @@ export function DetailDrawer({ nodeId, onClose }: { nodeId: string | null; onClo
                 ))}
               </dl>
               {canEdit && (
-                <div className="flex gap-2">
-                  <Input placeholder={t("label")} value={metaKey} onChange={(e) => setMetaKey(e.target.value)} />
-                  <Input placeholder={t("value")} value={metaVal} onChange={(e) => setMetaVal(e.target.value)} />
-                  <Button variant="outline" onClick={() => {
+                <div className="flex flex-col gap-2 mt-4">
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" className="flex-1" onClick={() => setMetaKey("Shahar")}>{t("addCityBtn")}</Button>
+                    <Button variant="secondary" size="sm" className="flex-1" onClick={() => setMetaKey("Viloyat")}>{t("addRegionBtn")}</Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input placeholder={t("label")} value={metaKey} onChange={(e) => setMetaKey(e.target.value)} />
+                    <Input 
+                      placeholder={metaKey === 'Viloyat' || metaKey === 'Region' || metaKey === 'Регион' ? t("metaRegionPlaceholder") : metaKey === 'Shahar' || metaKey === 'City' || metaKey === 'Город' ? t("metaCityPlaceholder") : t("value")} 
+                      value={metaVal} 
+                      onChange={(e) => setMetaVal(e.target.value)} 
+                    />
+                    <Button variant="outline" onClick={() => {
                     if (!metaKey.trim()) return;
                     guard(() => updateNode(person.id, { metadata: { ...(person.metadata ?? {}), [metaKey.trim()]: metaVal.trim() } }));
                     setMetaKey(""); setMetaVal("");
