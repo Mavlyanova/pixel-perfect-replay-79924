@@ -147,3 +147,37 @@ export function lifespan(n: Pick<PersonNode, "birthDate" | "deathDate">): string
   const b = n.birthDate?.slice(0, 4) || "?";
   return n.deathDate ? `${b} – ${n.deathDate.slice(0, 4)}` : `${b} –`;
 }
+
+export type Relation = "parent" | "child" | "sibling" | "spouse";
+
+/**
+ * Edges to add so that `b` becomes `a`'s <rel>. Siblings share a's parents.
+ * Throws when the relation is impossible or already exists.
+ */
+export function relationEdges(edges: Edge[], a: string, b: string, rel: Relation): Omit<Edge, "id">[] {
+  if (a === b) throw new Error("self");
+  const has = (from: string, to: string, type: Edge["type"]) =>
+    edges.some((e) => e.type === type && ((e.from === from && e.to === to) || (type === "spouse" && e.from === to && e.to === from)));
+  let out: Omit<Edge, "id">[] = [];
+  if (rel === "parent") {
+    if (descendantsOf(edges, a).has(b)) throw new Error("cycle");
+    out = [{ from: b, to: a, type: "parent" }];
+  } else if (rel === "child") {
+    if (ancestorsOf(edges, a).has(b)) throw new Error("cycle");
+    out = [{ from: a, to: b, type: "parent" }];
+  } else if (rel === "spouse") {
+    out = [{ from: a, to: b, type: "spouse" }];
+  } else {
+    let shared = parentsOf(edges, a);
+    let child = b;
+    if (shared.length === 0) {
+      shared = parentsOf(edges, b);
+      child = a;
+    }
+    if (shared.length === 0) throw new Error("no-parents");
+    out = shared.filter((p) => p !== child).map((p) => ({ from: p, to: child, type: "parent" as const }));
+  }
+  out = out.filter((e) => !has(e.from, e.to, e.type));
+  if (out.length === 0) throw new Error("exists");
+  return out;
+}
