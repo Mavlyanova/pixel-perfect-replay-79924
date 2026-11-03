@@ -98,6 +98,12 @@ const uz = {
   fold: "Yig'ish",
   unfold: "Yoyish",
   canvasHint: "Kartani ikki marta bosing — tafsilotlar",
+  relQuestion: "{a} va {b} o'rtasida qanday qarindoshlik bor?",
+  relHint: "{b} — {a} uchun:",
+  relSibling: "Aka-uka / opa-singil",
+  relCancel: "Bekor qilish",
+  relAdded: "Bog'liqlik qo'shildi",
+  relInvalid: "Bu bog'liqlikni qo'shib bo'lmaydi",
   deletePerson: "O'chirish",
 };
 
@@ -200,6 +206,12 @@ const ru: Dict = {
   fold: "Свернуть",
   unfold: "Развернуть",
   canvasHint: "Двойной клик по карточке — детали",
+  relQuestion: "Какое родство между {a} и {b}?",
+  relHint: "{b} для {a}:",
+  relSibling: "Брат / сестра",
+  relCancel: "Отмена",
+  relAdded: "Связь добавлена",
+  relInvalid: "Невозможно добавить эту связь",
   deletePerson: "Удалить",
 };
 
@@ -299,6 +311,12 @@ const en: Dict = {
   fold: "Fold",
   unfold: "Unfold",
   canvasHint: "Double-click a card for details",
+  relQuestion: "What is the relationship between {a} and {b}?",
+  relHint: "{b} is {a}'s:",
+  relSibling: "Sibling",
+  relCancel: "Cancel",
+  relAdded: "Relationship added",
+  relInvalid: "This relationship can't be added",
   deletePerson: "Delete",
 };
 

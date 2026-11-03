@@ -25,6 +25,8 @@ import {
   computeHidden,
   edgeBranch,
   layoutPositions,
+  relationEdges,
+  type Relation,
   type Direction,
 } from "@/lib/treeLayout";
 import { PersonCard, type PersonFlowNode } from "@/components/tree/PersonCard";
@@ -32,13 +34,14 @@ import { DetailDrawer } from "@/components/tree/DetailDrawer";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const nodeTypes: NodeTypes = { person: PersonCard };
 type Pos = Record<string, { x: number; y: number }>;
 type TreeFocusProps = { focusNodeId?: string | null; onFocusComplete?: () => void };
 
 function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
-  const { t, nodes, edges, user, currentRole, reconnectEdge, removeEdge } = useShajara();
+  const { t, nodes, edges, user, currentRole, reconnectEdge, removeEdge, addEdge } = useShajara();
   const canEdit = canMutate(currentRole);
   const rf = useReactFlow();
   const initialFitView = useRef(!focusNodeId);
@@ -52,6 +55,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
   const [isolateId, setIsolateId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [positions, setPositions] = useState<Pos>({});
+  const [pending, setPending] = useState<{ a: string; b: string; spouseHandle: boolean } | null>(null);
 
   const hidden = useMemo(() => computeHidden(nodes, edges, collapsed, isolateId), [nodes, edges, collapsed, isolateId]);
   const visibleNodes = useMemo(() => nodes.filter((n) => !hidden.has(n.id)), [nodes, hidden]);
@@ -155,6 +159,34 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
     },
     [reconnectEdge, t],
   );
+
+  const onConnect = useCallback(
+    (conn: Connection) => {
+      if (!canEdit) {
+        toast.error(t("viewerWarning"));
+        return;
+      }
+      if (!conn.source || !conn.target || conn.source === conn.target) return;
+      setPending({ a: conn.source, b: conn.target, spouseHandle: conn.targetHandle === "s-in" });
+    },
+    [canEdit, t],
+  );
+
+  const applyRelation = (rel: Relation) => {
+    if (!pending) return;
+    try {
+      relationEdges(edges, pending.a, pending.b, rel).forEach((e) => addEdge(e));
+      toast.success(t("relAdded"));
+    } catch {
+      toast.error(t("relInvalid"));
+    }
+    setPending(null);
+  };
+  const nameOf = (id: string) => nodes.find((n) => n.id === id)?.fullName ?? "";
+  const relOptions: Relation[] = pending?.spouseHandle ? ["spouse", "sibling"] : ["parent", "child", "sibling", "spouse"];
+  const relLabel: Record<Relation, "relParent" | "relChild" | "relSibling" | "relSpouse"> = {
+    parent: "relParent", child: "relChild", sibling: "relSibling", spouse: "relSpouse",
+  };
 
   const onEdgesDelete = useCallback(
     (deleted: FlowEdge[]) => {
@@ -265,7 +297,8 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
           onEdgesDelete={onEdgesDelete}
           edgesReconnectable={canEdit}
           deleteKeyCode={canEdit ? ["Delete", "Backspace"] : null}
-          nodesConnectable={false}
+          nodesConnectable={canEdit}
+          onConnect={onConnect}
           zoomOnDoubleClick={false}
           minZoom={0.1}
           maxZoom={2}
@@ -277,6 +310,25 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
           <MiniMap pannable zoomable />
         </ReactFlow>
       </div>
+
+      <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {pending && t("relQuestion", { a: nameOf(pending.a), b: nameOf(pending.b) })}
+            </DialogTitle>
+            <DialogDescription>{pending && t("relHint", { a: nameOf(pending.a), b: nameOf(pending.b) })}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            {relOptions.map((r) => (
+              <Button key={r} variant="outline" onClick={() => applyRelation(r)}>{t(relLabel[r])}</Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPending(null)}>{t("relCancel")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <DetailDrawer nodeId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
