@@ -6,6 +6,7 @@ import { OnboardingModal } from "@/components/OnboardingModal";
 import { TreeTab } from "@/components/TreeTab";
 import { PeopleTab } from "@/components/PeopleTab";
 import { SettingsTab, LANG_LABEL } from "@/components/SettingsTab";
+import { TreeSwitcher } from "@/components/TreeSwitcher";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -111,9 +112,8 @@ export function AppShell() {
         <div className="mt-auto space-y-2 border-t border-sidebar-border p-3">
           {!collapsed && (
             <div className="text-xs">
-              <p className="text-muted-foreground">{t("activeTree")}</p>
-              <p className="font-medium">{activeTree?.name}</p>
-              <p className="text-muted-foreground">{nodes.length} {t("members")}</p>
+              <TreeSwitcher />
+              <p className="mt-1 text-muted-foreground">{nodes.length} {t("members")}</p>
             </div>
           )}
           <div className={`flex gap-1 ${collapsed ? "flex-col items-center" : "items-center"}`}>

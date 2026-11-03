@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { toast } from "sonner";
 import { useShajara } from "@/context/ShajaraContext";
 import { LastOwnerError, listCollaborators, type Role } from "@/lib/shajara";
 import { LANGS, type Lang } from "@/i18n/translations";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const ROLES: Role[] = ["Owner", "Editor", "Viewer"];
 const ROLE_KEY = { Owner: "roleOwner", Editor: "roleEditor", Viewer: "roleViewer" } as const;
@@ -10,7 +13,9 @@ const DESC_KEY = { Owner: "descOwner", Editor: "descEditor", Viewer: "descViewer
 export const LANG_LABEL: Record<Lang, string> = { uz: "O'zbekcha", ru: "Русский", en: "English" };
 
 export function SettingsTab() {
-  const { t, lang, setLang, activeTree, user, currentRole, changeRole } = useShajara();
+  const { t, lang, setLang, activeTree, user, currentRole, changeRole, invite } = useShajara();
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("Viewer");
   if (!activeTree) return null;
   const isOwner = currentRole === "Owner";
   const people = listCollaborators(activeTree, user);
@@ -60,6 +65,36 @@ export function SettingsTab() {
               </li>
             ))}
           </ul>
+        )}
+        {isOwner && (
+          <form
+            className="mt-4 flex flex-wrap items-end gap-2 border-t border-border pt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!inviteName.trim()) return;
+              try {
+                invite(inviteName, inviteRole);
+                toast.success(t("invited"));
+                setInviteName("");
+              } catch {
+                toast.error(t("ownerOnly"));
+              }
+            }}
+          >
+            <div className="min-w-48 flex-1">
+              <p className="mb-1 text-sm font-medium">{t("inviteTitle")}</p>
+              <Input placeholder={t("fullName")} value={inviteName} onChange={(e) => setInviteName(e.target.value)} />
+            </div>
+            <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as Role)}>
+              <SelectTrigger className="w-36" aria-label={t("role")}>
+                <SelectValue>{t(ROLE_KEY[inviteRole])}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => <SelectItem key={r} value={r}>{t(ROLE_KEY[r])}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button type="submit">{t("invite")}</Button>
+          </form>
         )}
       </section>
       <section className="h-fit rounded-xl border border-border bg-card p-5">
