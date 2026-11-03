@@ -131,7 +131,7 @@ function TreeCanvas({ focusNodeId, onFocusComplete }: TreeFocusProps) {
         targetHandle: spouse ? "s-in" : null,
         type: spouse ? "straight" : parentCardViewMode === "combined" ? "smoothstep" : ortho ? "smoothstep" : "default",
         reconnectable: canEdit && !spouse,
-        style: { stroke: `var(--branch-${branch})`, strokeWidth: 2, ...(spouse ? { strokeDasharray: "6 4" } : {}) },
+        style: { stroke: `var(--branch-${branch})`, strokeWidth: 2, ...(spouse ? { strokeDasharray: e.divorceYear ? "4 8" : "6 4", opacity: e.divorceYear ? 0.4 : 1 } : {}) },
       };
     });
 
