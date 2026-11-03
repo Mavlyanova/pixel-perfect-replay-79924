@@ -91,7 +91,9 @@ export function layoutPositions(
   edges: Edge[],
   direction: Direction,
   compact: boolean,
+  parentCardViewMode: 'combined' | 'separated' = 'separated'
 ): Record<string, { x: number; y: number }> {
+  const spouseGap = parentCardViewMode === 'combined' ? 16 : SPOUSE_GAP;
   const size = compact ? CARD_SIZE.compact : CARD_SIZE.full;
   const horizontal = direction === "TB" || direction === "BT";
   const ids = new Set(nodes.map((n) => n.id));
@@ -110,15 +112,15 @@ export function layoutPositions(
   }
 
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: direction, nodesep: SPOUSE_GAP, ranksep: 90 });
+  g.setGraph({ rankdir: direction, nodesep: spouseGap, ranksep: 90 });
   g.setDefaultEdgeLabel(() => ({}));
   units.forEach((members, uid) => {
     const k = members.length;
     g.setNode(
       uid,
       horizontal
-        ? { width: k * size.width + (k - 1) * SPOUSE_GAP, height: size.height }
-        : { width: size.width, height: k * size.height + (k - 1) * SPOUSE_GAP },
+        ? { width: k * size.width + (k - 1) * spouseGap, height: size.height }
+        : { width: size.width, height: k * size.height + (k - 1) * spouseGap },
     );
   });
   visible.forEach((e) => {
@@ -136,8 +138,8 @@ export function layoutPositions(
     const top = p.y - p.height / 2;
     members.forEach((m, i) => {
       out[m] = horizontal
-        ? { x: left + i * (size.width + SPOUSE_GAP), y: top }
-        : { x: left, y: top + i * (size.height + SPOUSE_GAP) };
+        ? { x: left + i * (size.width + spouseGap), y: top }
+        : { x: left, y: top + i * (size.height + spouseGap) };
     });
   });
   return out;
